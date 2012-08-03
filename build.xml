@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="hebphonics" default="build">
+  <!-- Properties -->
+  <property name="bin.pylint" value="pylint" />
+  <property name="bin.pep8" value="pep8" />
+  <property name="bin.nose" value="nosetests" />
+
+  <!-- Files -->
+  <fileset id="files.python" dir="." includes="**/*.py" />
+
+  <!-- Targets -->
+  
+  <!-- Cleaning -->
+  <target name="clean" description="remove generated files">
+    <delete verbose="true">
+      <fileset dir="." includes="**/*.pyc" defaultexcludes="false" />
+      <fileset dir="." includes="**/*.*~" defaultexcludes="false" />
+    </delete>
+  </target>
+
+  <!-- Testing -->
+  <target name="test" depends="test-static,test-unit"
+          description="run static and unit tests" />
+
+  <target name="test-static" description="run static tests">
+    <!-- apply executable="${bin.pylint}">
+      <fileset refid="files.python" />
+    </apply -->
+    <apply executable="${bin.pep8}">
+      <fileset refid="files.python" />
+    </apply>
+  </target>
+  
+  <target name="test-unit" description="run unit tests">
+    <exec executable="${bin.nose}">
+      <arg value="--with-doctest" />
+      <arg value="--with-coverage"/>
+      <arg value="--cover-package=${ant.project.name}"/>
+    </exec>
+  </target>
+</project>
