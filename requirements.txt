@@ -1,1 +1,2 @@
-pep8==1.0.1
+hebphonics
+pep8>=1.0.1
