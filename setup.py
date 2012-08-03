@@ -2,7 +2,7 @@ from distutils.core import setup
 import sys
 
 sys.path.append('hebphonics')
-import hebphonics
+from hebphonics import HebPhonics 
 
 setup(name='hebphonics',
       version='0.0.1',
@@ -11,8 +11,8 @@ setup(name='hebphonics',
       url='https://github.com/metaist/hebphonics',
       download_url='https://github.com/metaist/hebphonics',
       description='Easy Hebrew language parsing and building word lists using Python.',
-      long_description=hebphonics.HebPhonics.__doc__,
-      package_dir={'': 'hebphonics'},
+      long_description=HebPhonics.__doc__,
+      packages=['hebphonics'],
       py_modules=['hebphonics'],
       provides=['hebphonics'],
       keywords='hebrew phonics fluency reading',

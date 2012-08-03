@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="hebphonics" default="build">
-  <!-- Properties -->
-  <property name="bin.pylint" value="pylint" />
-  <property name="bin.pep8" value="pep8" />
+<project name="hebphonics" default="all">
+  <!-- Executables -->
   <property name="bin.nose" value="nosetests" />
+  <property name="bin.pep8" value="pep8" />
+  <property name="bin.pylint" value="pylint" />
+  <property name="bin.python" value="python" />
 
   <!-- Files -->
   <fileset id="files.python" dir="." includes="**/*.py" />
 
   <!-- Targets -->
-  <target name="resolve" description="download dependencies">
-  </target>  
-  
+  <target name="all" depends="clean,resolve,test,dist"
+    description="clean, download, test, and build the system" />
+
   <!-- Cleaning -->
   <target name="clean" description="remove generated files">
-    <delete verbose="true">
+    <delete verbose="true" quiet="true" failonerror="false">
       <fileset dir="." includes="**/*.pyc" defaultexcludes="false" />
       <fileset dir="." includes="**/*.*~" defaultexcludes="false" />
+      <fileset dir="." includes="MANIFEST" />
+      <fileset dir="." includes="dist/" />
     </delete>
+    <delete dir="dist" quiet="true" />
+  </target>
+
+  <!-- Dependencies -->  
+  <target name="resolve" description="download dependencies">
+  </target>
+
+  <target name="texts" description="download texts">
+    <subant antfile="texts/build.xml" target="all" buildpath="./" />
   </target>
 
   <!-- Testing -->
@@ -32,12 +44,20 @@
       <fileset refid="files.python" />
     </apply>
   </target>
-  
+
   <target name="test-unit" description="run unit tests">
     <exec executable="${bin.nose}">
       <arg value="--with-doctest" />
       <arg value="--with-coverage"/>
       <arg value="--cover-package=${ant.project.name}"/>
     </exec>
+  </target>
+  
+  <!-- Distribution -->
+  <target name="dist" description="build a distributable tarball">
+    <exec executable="${bin.python}">
+      <arg value="setup.py" />    
+      <arg value="sdist" />    
+    </exec>  
   </target>
 </project>
