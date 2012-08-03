@@ -15,16 +15,16 @@
 
   <!-- Cleaning -->
   <target name="clean" description="remove generated files">
-    <delete verbose="true" quiet="true" failonerror="false">
+    <delete verbose="true" quiet="true" failonerror="false"
+            includeemptydirs="true">
       <fileset dir="." includes="**/*.pyc" defaultexcludes="false" />
       <fileset dir="." includes="**/*.*~" defaultexcludes="false" />
       <fileset dir="." includes="MANIFEST" />
       <fileset dir="." includes="dist/" />
     </delete>
-    <delete dir="dist" quiet="true" />
   </target>
 
-  <!-- Dependencies -->  
+  <!-- Dependencies -->
   <target name="resolve" description="download dependencies">
   </target>
 
@@ -52,12 +52,12 @@
       <arg value="--cover-package=${ant.project.name}"/>
     </exec>
   </target>
-  
+
   <!-- Distribution -->
   <target name="dist" description="build a distributable tarball">
     <exec executable="${bin.python}">
-      <arg value="setup.py" />    
-      <arg value="sdist" />    
-    </exec>  
+      <arg value="setup.py" />
+      <arg value="sdist" />
+    </exec>
   </target>
 </project>
