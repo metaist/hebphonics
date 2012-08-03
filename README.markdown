@@ -1,4 +1,4 @@
-# [HebPhonics][demo]
+# [HebPhonics][demo] [![Build Status](https://secure.travis-ci.org/metaist/hebphonics.png)](http://travis-ci.org/metaist/hebphonics)
 
 HebPhonics is library for parsing Hebrew texts and a tool for making lists
 of Hebrew words for teaching Hebrew reading and fluency.
