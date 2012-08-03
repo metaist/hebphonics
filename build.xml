@@ -9,6 +9,8 @@
   <fileset id="files.python" dir="." includes="**/*.py" />
 
   <!-- Targets -->
+  <target name="resolve" description="download dependencies">
+  </target>  
   
   <!-- Cleaning -->
   <target name="clean" description="remove generated files">
