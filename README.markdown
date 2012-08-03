@@ -7,6 +7,11 @@ of Hebrew words for teaching Hebrew reading and fluency.
 
 Play with the [HebPhonics Demo][demo]!
 
+## Getting Started
+
+Clone the repository via `git clone git://github.com/metaist/hebphonics.git`
+or get [the latest code](https://github.com/metaist/hebphonics/zipball/master).
+
 ## Version Numbering
 
 To the extent possible, HebPhonics uses [Semantic Versioning][semver].
