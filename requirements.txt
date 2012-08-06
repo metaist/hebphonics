@@ -1,1 +1,6 @@
+beautifulsoup4>=4.0.2
+CherryPy>=3.2.2
+Mako>=0.7.0
+Markdown>=2.1.1
+nose>=1.1.2
 pep8>=1.0.1
