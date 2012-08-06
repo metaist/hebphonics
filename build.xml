@@ -3,6 +3,7 @@
   <!-- Executables -->
   <property name="bin.nose" value="nosetests" />
   <property name="bin.pep8" value="pep8" />
+  <property name="bin.pip" value="pip" />
   <property name="bin.pylint" value="pylint" />
   <property name="bin.python" value="python" />
 
@@ -26,6 +27,12 @@
 
   <!-- Dependencies -->
   <target name="resolve" description="download dependencies">
+    <exec executable="${bin.pip}">
+      <arg value="install" />
+      <arg value="-r"/>
+      <arg value="requirements.txt"/>
+      <arg value="--use-mirrors"/>
+    </exec>
   </target>
 
   <target name="texts" description="download texts">

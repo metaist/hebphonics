@@ -3,7 +3,5 @@ python:
   - "3.2"
   - "2.7"
   - "2.6"
-install:
-  - "pip install -r requirements.txt --use-mirrors"
-  - ant resolve
+install: ant resolve
 script: ant test
