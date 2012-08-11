@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="hebphonics-texts" default="all">
-
-  <property name="tanach.url" value="http://www.tanach.us" />
-  <property name="tanach.zip" value="Tanach.zip" />
-  <property name="tanach.tmp" value="/tmp" />
-  <property name="tanach.unzip" value="unzip" />
-
+  <!-- Macro for downloading files -->
   <macrodef name="getlib">
     <attribute name="src" />
     <attribute name="dest" />
@@ -17,15 +12,26 @@
     </sequential>
   </macrodef>
 
-  <target name="all" depends="tanach"
+  <!-- Top-level Targets -->
+  <target name="all" depends="tanach,siddur"
           description="download all texts" />
+
+  <target name="remove" depends="remove-tanach,remove-siddur"
+          description="remove all texts" />
+
+  <!-- Tanach from tanach.us -->
+  <property name="tanach.url" value="http://www.tanach.us" />
+  <property name="tanach.zip" value="Tanach.zip" />
+  <property name="tanach.tmp" value="/tmp" />
+  <property name="tanach.unzip" value="unzip" />
+  <property name="tanach.dir" value="tanach.us" />
 
   <target name="tanach" description="download Tanach">
     <getlib src="${tanach.url}/${tanach.zip}"
             dest="${tanach.tmp}/${tanach.zip}" />
     <unzip  src="${tanach.tmp}/${tanach.zip}"
             dest="${tanach.tmp}/${tanach.unzip}" />
-    <move todir="tanach">
+    <move todir="${tanach.dir}">
       <fileset dir="${tanach.tmp}/${tanach.unzip}/Books">
         <include name="*.xml"/>
         <exclude name="*.DH.xml"/>
@@ -33,10 +39,37 @@
     </move>
   </target>
 
-  <target name="tanach-clean" description="remove Tanach">
+  <target name="remove-tanach" description="remove Tanach">
     <delete>
-      <fileset dir="tanach">
+      <fileset dir="${tanach.dir}">
         <include name="*.xml" />
+      </fileset>
+    </delete>
+  </target>
+
+  <!-- Siddur from onlinesiddur.com -->
+  <property name="siddur.dir" value="onlinesiddur.com" />
+  <property name="siddur.url" value="http://onlinesiddur.com" />
+
+  <target name="siddur" description="download Siddur">
+    <getlib src="${siddur.url}/shac/ashk/text.php"
+            dest="${siddur.dir}/ashkenaz-shacharit.html" />
+    <getlib src="${siddur.url}/minc/ashk/text.php"
+            dest="${siddur.dir}/ashkenaz-mincha.html" />
+    <getlib src="${siddur.url}/minc/ashk/text.php"
+            dest="${siddur.dir}/ashkenaz-mincha.html" />
+    <getlib src="${siddur.url}/mazo/ashk/text.php"
+            dest="${siddur.dir}/ashkenaz-birchat-hamazon.html" />
+    <getlib src="${siddur.url}/brac/ashk/text.php"
+            dest="${siddur.dir}/ashkenaz-bracha-achrona.html" />
+    <getlib src="${siddur.url}/tefi/text.php"
+            dest="${siddur.dir}/tefillat-haderech.html" />
+  </target>
+
+  <target name="remove-siddur" description="remove Siddur">
+    <delete>
+      <fileset dir="${siddur.dir}">
+        <include name="*.html" />
       </fileset>
     </delete>
   </target>
