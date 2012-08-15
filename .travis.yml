@@ -3,5 +3,5 @@ python:
 # - "3.2"
   - "2.7"
   - "2.6"
-install: ant resolve
-script: ant test
+install: ant -e resolve
+script: ant -e test
