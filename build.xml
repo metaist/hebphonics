@@ -47,13 +47,13 @@
     <!-- apply executable="${bin.pylint}">
       <fileset refid="files.python" />
     </apply -->
-    <apply executable="${bin.pep8}">
+    <apply executable="${bin.pep8}" failonerror="true">
       <fileset refid="files.python" />
     </apply>
   </target>
 
   <target name="test-unit" description="run unit tests">
-    <exec executable="${bin.nose}">
+    <exec executable="${bin.nose}" failonerror="true">
       <arg value="--with-doctest" />
       <arg value="--with-coverage"/>
       <arg value="--cover-package=${ant.project.name}"/>
