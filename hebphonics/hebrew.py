@@ -19,9 +19,9 @@ PROCESS STEPS
 
 import re
 
-import metadata
-import codes as U
-import names as N
+from . import metadata
+from . import codes as U
+from . import names as N
 
 globals().update(metadata.metadata())  # add package metadata
 
@@ -53,10 +53,12 @@ def ishataf(name):
     >>> ishataf('invalid-name')
     False
     """
-    return N.normalize(name) in [N.HATAF_SEGOL, N.HATAF_PATAH, N.HATAF_QAMATS]
+    return N.normalize(name) in [
+        N.NAME_HATAF_SEGOL, N.NAME_HATAF_PATAH, N.NAME_HATAF_QAMATS
+    ]
 
 
-def names(uni):
+def to_names(uni):
     """Return truncated Unicode names for each character in a string.
 
     Args:
@@ -69,13 +71,13 @@ def names(uni):
         hebphonics.codes.names()
 
     Examples:
-    >>> names(U.LETTER_ALEF + U.LETTER_BET)
+    >>> to_names(U.LETTER_ALEF + U.LETTER_BET)
     ['LETTER_ALEF', 'LETTER_BET']
     """
-    return U.names(uni, ignore=True, type='const')
+    return U.to_names(uni, ignore=True, mode='const')
 
 
-def groups(names):
+def to_groups(names):
     """Return a first-order approximation of grouping letters and vowels.
 
     NOTE:
@@ -89,10 +91,10 @@ def groups(names):
         list. Each list item is itself a list of Unicode letters and vowels.
 
     Names with an unknown prefix:
-    >>> groups(['UNKNOWN_TOKEN'])
+    >>> to_groups(['UNKNOWN_TOKEN'])
     []
 
-    >>> groups(['LETTER_BET', 'POINT_DAGESH_OR_MAPIQ',
+    >>> to_groups(['LETTER_BET', 'POINT_DAGESH_OR_MAPIQ',
     ...     'POINT_SHEVA', 'SOLIDUS', 'LETTER_RESH', 'POINT_TSERE']) == [
     ...     ['LETTER_BET', 'POINT_DAGESH_OR_MAPIQ', 'POINT_SHEVA'],
     ...     ['SOLIDUS'], ['LETTER_RESH', 'POINT_TSERE']]
@@ -100,19 +102,19 @@ def groups(names):
     """
     result, group = [], []
     for name in names:
-        type = None
-        g = re.match('([^_]*)_', name)
-        if g:
-            type = g.groups()[0]
+        prefix = None
+        regex = re.match('([^_]*)_', name)
+        if regex:
+            prefix = regex.groups()[0]
 
-        if type in ['LETTER'] or name in ['SOLIDUS']:
+        if prefix in ['LETTER'] or name in ['SOLIDUS']:
             if group:  # save any previously constructed group
                 result.append(group)
             group = [name]
-        elif type in ['POINT', 'PUNCTUATION']:
+        elif prefix in ['POINT', 'PUNCTUATION']:
             group.append(name)
         else:  # some unknown token
-            type = 'UNKNOWN'
+            prefix = 'UNKNOWN'
             continue
 
     if group:  # save last group, if any

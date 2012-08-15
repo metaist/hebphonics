@@ -9,7 +9,7 @@ from hebphonics import codes
 class TestCodes(unittest.TestCase):
     def test_names(self):
         """Expected to parse names correctly."""
-        test = codes.names(u'בְּ/רֵאשִׁית')
+        test = codes.to_names(u'בְּ/רֵאשִׁית')
         expected = [
             'LETTER_BET', 'POINT_DAGESH_OR_MAPIQ', 'POINT_SHEVA', 'SOLIDUS',
             'LETTER_RESH', 'POINT_TSERE', 'LETTER_ALEF', 'LETTER_SHIN',

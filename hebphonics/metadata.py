@@ -22,10 +22,9 @@ def metadata():
     >>> type(metadata()) is dict
     True
     """
-    fields = map(
-        lambda x: '__' + x + '__',
-        ['author', 'copyright', 'email', 'license', 'maintainer', 'status',
-            'version_info', 'version']
-    )
+    fields = ['__' + field + '__' for field in [
+        'author', 'copyright', 'email', 'license', 'maintainer', 'status',
+        'version_info', 'version'
+    ]]
 
     return dict((f, globals()[f]) for f in fields)

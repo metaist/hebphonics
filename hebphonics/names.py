@@ -11,7 +11,7 @@ where as HebPhonics does.
 
 import re
 
-import metadata
+from . import metadata
 
 globals().update(metadata.metadata())  # add package metadata
 
@@ -29,14 +29,8 @@ _R_PATAH = r"patac?h"
 _R_QAMATS = r"[kq]amat[sz]"
 _R_HOLAM = r"c?hol[ao]m"
 
-# return the constant name for a HebPhonics character name
-_const_name = lambda n: n.upper().replace('-', '_')
-
-# return a compiled regular expression and result tuple
-_compile_regex = lambda t: (re.compile(r"^" + t[0] + r"$"), t[1])
-
 # regular expressions for normalizing HebPhonics character names
-_NAMES = dict(map(_compile_regex, {
+_RULES = {
     # Non-Hebrew symbols
     r"space": 'space',
     r"solidus": 'solidus',
@@ -83,7 +77,6 @@ _NAMES = dict(map(_compile_regex, {
 
     # Holam
     _R_HOLAM + _R_MALE: 'holam-male',  # holom + (alef|he|vav)
-    # TODO: Typically, we see holam + vav; check if alef/he work as well.
     _R_HOLAM + r"(-c?haser)?": 'holam-haser',
 
     # Qubuts / Shuruq
@@ -128,10 +121,19 @@ _NAMES = dict(map(_compile_regex, {
     r"sin": 'sin',
     r"ta[fv]": 'tav',
     r"sa[fv]": 'sav'
-}.items()))
+}
+
+# compiled regular expressions mapping to HebPhonics character name
+_NAMES = dict(
+    (re.compile(r"^" + k + r"$"), v)
+    for k, v in _RULES.iteritems()
+)
 
 # create constants for each of the HebPhonics character names
-globals().update(dict((_const_name(n), n) for n in _NAMES.values()))
+globals().update(dict(
+    ('NAME_' + n.upper().replace('-', '_'), n)
+    for n in _RULES.values()
+))
 
 
 def normalize(name):
