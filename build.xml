@@ -7,6 +7,8 @@
   <property name="bin.pylint" value="pylint" />
   <property name="bin.python" value="python" />
 
+  <property name="project.package" value="hebphonics" />
+
   <!-- Files -->
   <fileset id="files.python" dir="." includes="**/*.py" />
 
@@ -40,25 +42,32 @@
   </target>
 
   <!-- Testing -->
-  <target name="test" depends="test-static,test-unit"
-          description="run static and unit tests" />
-
-  <target name="test-static" description="run static tests">
-    <!-- apply executable="${bin.pylint}">
-      <fileset refid="files.python" />
-    </apply -->
-    <apply executable="${bin.pep8}" failonerror="true">
-      <fileset refid="files.python" />
-    </apply>
-  </target>
+  <target name="test" depends="test-unit,test-static"
+          description="run unit and static tests" />
 
   <target name="test-unit" description="run unit tests">
     <exec executable="${bin.nose}" failonerror="true">
       <arg value="--with-doctest" />
       <arg value="--with-coverage"/>
-      <arg value="--cover-package=${ant.project.name}"/>
+      <arg value="--cover-package=${project.package}"/>
     </exec>
   </target>
+
+  <target name="test-pep8" description="run pep8">
+    <apply executable="${bin.pep8}" failonerror="true">
+      <fileset refid="files.python" />
+    </apply>
+  </target>
+
+  <target name="test-pylint" description="run pylint">
+    <exec executable="${bin.pylint}" failonerror="true">
+      <arg value="${project.package}" />
+      <arg value="--rcfile=.pylint.ini" />
+    </exec>
+  </target>
+
+  <target name="test-static" depends="test-pep8,test-pylint"
+          description="run static tests"/>
 
   <!-- Distribution -->
   <target name="dist" description="build a distributable tarball">
