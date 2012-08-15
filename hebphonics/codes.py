@@ -95,23 +95,15 @@ def names(uni, ignore=False, type='const'):
     >>> try: names(LETTER_ALEF, type='foo')
     ... except AssertionError, e: print e
     type must be one of ['unicode', 'const', 'short']
-    """ u"""
+
     Characters outside of HebPhonics can be omitted:
     >>> names(LETTER_ALEF + u'\u00C1')
     ['LETTER_ALEF', 'LATIN_CAPITAL_LETTER_A_WITH_ACUTE']
     >>> names(LETTER_ALEF + u'\u00C1', ignore=True)
     ['LETTER_ALEF']
-
-    Longer example:
-    >>> names(u'בְּ/רֵאשִׁית') == ['LETTER_BET', 'POINT_DAGESH_OR_MAPIQ',
-    ...   'POINT_SHEVA', 'SOLIDUS', 'LETTER_RESH', 'POINT_TSERE',
-    ...   'LETTER_ALEF', 'LETTER_SHIN', 'POINT_SHIN_DOT', 'POINT_HIRIQ',
-    ...   'LETTER_YOD', 'LETTER_TAV']
-    True
     """
     assert type in ['unicode', 'const', 'short'], (
-        "type must be one of "
-        "['unicode', 'const', 'short']"
+        "type must be one of ['unicode', 'const', 'short']"
     )
 
     f = {
