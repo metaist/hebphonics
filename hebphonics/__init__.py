@@ -7,7 +7,7 @@ HebPhonics is Hebrew language parser that is optimized for teaching Hebrew
 reading and fluency.
 """
 
-import metadata
+from . import metadata
 
 globals().update(metadata.metadata())  # add package metadata
 
