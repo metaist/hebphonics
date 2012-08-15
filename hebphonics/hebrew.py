@@ -73,3 +73,49 @@ def names(uni):
     ['LETTER_ALEF', 'LETTER_BET']
     """
     return U.names(uni, ignore=True, type='const')
+
+
+def groups(names):
+    """Return a first-order approximation of grouping letters and vowels.
+
+    NOTE:
+        This function operates on the names given, not attempt is made to
+        verify that the symbols are valid.
+
+    Args:
+        names (list): truncated Unicode names for characters
+
+    Returns:
+        list. Each list item is itself a list of Unicode letters and vowels.
+
+    Names with an unknown prefix:
+    >>> groups(['UNKNOWN_TOKEN'])
+    []
+
+    >>> groups(['LETTER_BET', 'POINT_DAGESH_OR_MAPIQ',
+    ...     'POINT_SHEVA', 'SOLIDUS', 'LETTER_RESH', 'POINT_TSERE']) == [
+    ...     ['LETTER_BET', 'POINT_DAGESH_OR_MAPIQ', 'POINT_SHEVA'],
+    ...     ['SOLIDUS'], ['LETTER_RESH', 'POINT_TSERE']]
+    True
+    """
+    result, group = [], []
+    for name in names:
+        type = None
+        g = re.match('([^_]*)_', name)
+        if g:
+            type = g.groups()[0]
+
+        if type in ['LETTER'] or name in ['SOLIDUS']:
+            if group:  # save any previously constructed group
+                result.append(group)
+            group = [name]
+        elif type in ['POINT', 'PUNCTUATION']:
+            group.append(name)
+        else:  # some unknown token
+            type = 'UNKNOWN'
+            continue
+
+    if group:  # save last group, if any
+        result.append(group)
+
+    return result
