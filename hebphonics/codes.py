@@ -71,6 +71,8 @@ def names(uni, ignore=False, type='const'):
 
     Args:
         uni (unicode): unicode string
+
+    Kwargs:
         ignore (bool): whether or not to exclude code points outside of
             HebPhonics (default: False)
         type (str): one of:
