@@ -7,7 +7,7 @@ from hebphonics import codes
 
 
 class TestCodes(unittest.TestCase):
-    def test_word(self):
+    def test_names(self):
         """Expected to parse names correctly."""
         test = codes.names(u'בְּ/רֵאשִׁית')
         expected = [
