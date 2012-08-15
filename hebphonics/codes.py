@@ -29,19 +29,22 @@ __version__ = hebphonics.__version__
 _is_unicode = lambda u: '' != unicodedata.name(u, '')
 
 # return the Unicode name for a Unicode character
-_unicode_name = lambda u: unicodedata.name(u,
-    'U+' + hex(ord(u)).replace('x', ''))
+_unicode_name = lambda u: (
+    unicodedata.name(u, 'U+' + hex(ord(u)).replace('x', ''))
+)
 
 # return the HebPhonics name ("HEBREW " prefix and punctuation removed
-_const_name = lambda u: re.sub('[ -]', '_',
-    _unicode_name(u).replace('HEBREW ', ''))
+_const_name = lambda u: (
+    re.sub('[ -]', '_', _unicode_name(u).replace('HEBREW ', ''))
+)
 
 # return the HebPhonics short name (same as above, with further prefix removed)
-_short_name = (
-    lambda u:
-        re.sub('^(ACCENT|LETTER|LIGATURE|MARK|POINT|PUNCTUATION)_', '',
-            _const_name(u))
+_short_name = lambda u: (
+    re.sub(
+        '^(ACCENT|LETTER|LIGATURE|MARK|POINT|PUNCTUATION)_', '',
+        _const_name(u)
     )
+)
 
 # Unicode code points
 _POINTS = filter(_is_unicode, map(unichr, [
@@ -61,7 +64,7 @@ _POINTS = filter(_is_unicode, map(unichr, [
     # Alphabet Presentation Forms
     # <http://www.unicode.org/charts/PDF/UFB00.pdf>
     range(int('FB1D', 16), int('FB4F', 16))
-    ))
+))
 
 globals().update(dict((_const_name(char), char) for char in _POINTS))
 
@@ -107,8 +110,10 @@ def names(uni, ignore=False, type='const'):
     ...   'LETTER_YOD', 'LETTER_TAV']
     True
     """
-    assert type in ['unicode', 'const', 'short'], ("type must be one of "
-        "['unicode', 'const', 'short']")
+    assert type in ['unicode', 'const', 'short'], (
+        "type must be one of "
+        "['unicode', 'const', 'short']"
+    )
 
     f = {
         'unicode': _unicode_name,
@@ -116,6 +121,7 @@ def names(uni, ignore=False, type='const'):
         'short': _short_name
     }[type]
 
-    return [f(char)
-        for char in uni
-        if not ignore or char in _POINTS]
+    return [
+        f(char) for char in uni
+        if not ignore or char in _POINTS
+    ]
