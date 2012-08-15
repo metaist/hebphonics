@@ -1,22 +1,21 @@
-from distutils.core import setup
-import sys
+#!/usr/bin/python
+# coding: utf-8
 
-sys.path.append('hebphonics')
-from hebphonics import HebPhonics
+from distutils.core import setup
+
+import hebphonics
 
 setup(name='hebphonics',
-      version='0.0.1',
-      author='The Metaist',
-      author_email='metaist@metaist.com',
+      version=hebphonics.__version__,
+      author=hebphonics.__author__,
+      author_email=hebphonics.__email__,
       url='https://github.com/metaist/hebphonics',
       download_url='https://github.com/metaist/hebphonics',
-      description='Hebrew parsing and word-list building using Python.',
-      long_description=HebPhonics.__doc__,
+      description=hebphonics.__doc__.split('\n')[0],
+      long_description=hebphonics.__doc__,
       packages=['hebphonics'],
-      py_modules=['hebphonics'],
-      provides=['hebphonics'],
       keywords='hebrew phonics fluency reading',
-      license='MIT License',
+      license=hebphonics.__license__,
       classifiers=['Development Status :: 4 - Beta',
                    'Intended Audience :: Developers',
                    'Natural Language :: English',
