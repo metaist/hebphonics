@@ -11,9 +11,9 @@ where as HebPhonics does.
 
 import re
 
-import hebphonics
+import metadata
 
-globals().update(hebphonics.metadata())  # add package metadata
+globals().update(metadata.metadata())  # add package metadata
 
 # common regular expressions
 _R_HATAF = r"c?hataf-"
