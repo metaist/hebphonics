@@ -20,10 +20,9 @@ PROCESS STEPS
 import re
 
 import metadata
-import codes
-import names
+import codes as U
+import names as N
 
-U, N = codes, names  # alias
 globals().update(metadata.metadata())  # add package metadata
 
 
@@ -54,5 +53,23 @@ def ishataf(name):
     >>> ishataf('invalid-name')
     False
     """
-    check = names.normalize(name)
-    return check in [N.HATAF_SEGOL, N.HATAF_PATAH, N.HATAF_QAMATS]
+    return N.normalize(name) in [N.HATAF_SEGOL, N.HATAF_PATAH, N.HATAF_QAMATS]
+
+
+def names(uni):
+    """Return truncated Unicode names for each character in a string.
+
+    Args:
+        uni (unicode): a unicode string
+
+    Returns:
+        list. Names of the Unicode characters in the string.
+
+    See:
+        hebphonics.codes.names()
+
+    Examples:
+    >>> names(U.LETTER_ALEF + U.LETTER_BET)
+    ['LETTER_ALEF', 'LETTER_BET']
+    """
+    return U.names(uni, ignore=True, type='const')
