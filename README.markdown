@@ -22,6 +22,13 @@ Briefly, each release will be formatted as `<major>.<minor>.<patch>` where:
     is reset)
   * `<patch>` is incremented for bug fixes and other minor changes
 
+## Coding Style
+For python:
+  * `pep8` rules
+  * [Single-Double-Triple Quotes](http://stackoverflow.com/a/56190)
+  * [Module Headers](http://stackoverflow.com/a/1523456)
+  * [Docstrings](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html?showone=Comments#Comments)
+
 ## License
 Licensed under the [MIT License][osi-mit].
 
