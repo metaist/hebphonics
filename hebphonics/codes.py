@@ -20,10 +20,9 @@ CODE POINTS
 import re
 import unicodedata
 
-import __init__ as hebphonics
+import hebphonics
 
-__author__ = "{0.__author__} <{0.__email__}>".format(hebphonics)
-__version__ = hebphonics.__version__
+globals().update(hebphonics.metadata())  # add package metadata
 
 # filter function to retain only valid Unicode characters
 _is_unicode = lambda u: '' != unicodedata.name(u, '')

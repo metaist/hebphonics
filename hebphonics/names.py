@@ -11,10 +11,9 @@ where as HebPhonics does.
 
 import re
 
-import __init__ as hebphonics
+import hebphonics
 
-__author__ = "{0.__author__} <{0.__email__}>".format(hebphonics)
-__version__ = hebphonics.__version__
+globals().update(hebphonics.metadata())  # add package metadata
 
 # common regular expressions
 _R_HATAF = r"c?hataf-"
