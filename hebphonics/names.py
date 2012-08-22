@@ -60,20 +60,20 @@ _RULES = {
 
     # Segol
     _R_SEGOL: 'segol',
-    _R_HATAF + _R_SEGOL: 'hataf-segol',
     _R_SEGOL + _R_MALE: 'segol-male',  # segol + (alef|he|yod)
+    _R_HATAF + _R_SEGOL: 'hataf-segol',
 
     # Patah
     _R_PATAH: 'patah',
-    _R_HATAF + _R_PATAH: 'hataf-patah',
-    r"(furtive-)?" + _R_PATAH + r"(-g[ae]nuv(ah)?)?": 'patah-genuvah',
     _R_PATAH + _R_MALE: 'patah-male',  # patah + (alef|he)
+    r"(furtive-)?" + _R_PATAH + r"(-g[ae]nuv(ah)?)?": 'patah-genuvah',
+    _R_HATAF + _R_PATAH: 'hataf-patah',
 
     # Qamats
     _R_QAMATS + r"(-gadol)?": 'qamats',
+    _R_QAMATS + _R_MALE: 'qamats-male',  # qamats + (alef|he)
     _R_HATAF + _R_QAMATS: 'hataf-qamats',
     _R_QAMATS + r"-([kq]atan|c?hatuf)": 'qamats-qatan',
-    _R_QAMATS + _R_MALE: 'qamats-male',  # qamats + (alef|he)
 
     # Holam
     _R_HOLAM + _R_MALE: 'holam-male',  # holom + (alef|he|vav)
