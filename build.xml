@@ -42,10 +42,10 @@
   </target>
 
   <!-- Testing -->
-  <target name="test" depends="test-unit,test-static"
+  <target name="test" depends="test-nose,test-pep8,test-pylint"
           description="run unit and static tests" />
 
-  <target name="test-unit" description="run unit tests">
+  <target name="test-nose" description="run unit tests">
     <exec executable="${bin.nose}" failonerror="true">
       <arg value="--with-doctest" />
       <arg value="--with-coverage"/>
@@ -65,9 +65,6 @@
       <arg value="--rcfile=.pylint.ini" />
     </exec>
   </target>
-
-  <target name="test-static" depends="test-pep8,test-pylint"
-          description="run static tests"/>
 
   <!-- Distribution -->
   <target name="dist" description="build a distributable tarball">
