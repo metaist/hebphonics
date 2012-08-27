@@ -74,6 +74,18 @@ _POINTS = [
 globals().update(dict((_CONST_NAME(char), char) for char in _POINTS))
 
 
+def normalize(uni):
+    """Return a normalized decomposed unicode string.
+
+    Args:
+        uni (unicode): unicode string
+
+    Returns:
+        unicode. A normalized and decomposed Unicode string.
+    """
+    return unicodedata.normalize('NFKD', uni)
+
+
 def to_names(uni, ignore=False, mode='const'):
     """Return a list of Unicode names for each character in string.
 
