@@ -66,9 +66,9 @@ _RANGES = ([
 )
 
 _POINTS = [
-    unichr(num)
-    for num in _RANGES
-    if _IS_UNICODE(unichr(num))
+    unichr(_num)
+    for _num in _RANGES
+    if _IS_UNICODE(unichr(_num))
 ]
 
 globals().update(dict((_CONST_NAME(char), char) for char in _POINTS))
@@ -86,43 +86,52 @@ def normalize(uni):
     return unicodedata.normalize('NFKD', uni)
 
 
-def to_names(uni, ignore=False, mode='const'):
-    """Return a list of Unicode names for each character in string.
+def name(char, ignore=True, mode='short'):
+    """Returns the name of a Unicode code point.
 
     Args:
-        uni (unicode): unicode string
+        char (unicode): unicode character
 
     Kwargs:
         ignore (bool): whether or not to exclude code points outside of
-            HebPhonics (default: False)
+            HebPhonics (default: True)
         mode (str): one of:
             * 'unicode': return the full Unicode character name
-            * 'const': (default) return the HebPhonics constant name
-            * 'short': same as 'const', but with another prefix removed
+            * 'const': return the HebPhonics constant name
+            * 'short': (default) same as 'const', but without another prefix
 
     Returns:
-        list. String names of each Unicode code point in the given string.
+        str. String name of the Unicode code point.
 
     Examples:
-    >>> to_names(LETTER_ALEF + POINT_HIRIQ)
+    >>> name(LETTER_ALEF, mode='const')
+    'LETTER_ALEF'
+    >>> [name(x, mode='const') for x in LETTER_ALEF + POINT_HIRIQ]
     ['LETTER_ALEF', 'POINT_HIRIQ']
-    >>> to_names(LETTER_ALEF + POINT_HIRIQ, mode='short')
+    >>> [name(x, mode='short') for x in LETTER_ALEF + POINT_HIRIQ]
     ['ALEF', 'HIRIQ']
 
     Invalid mode raises an AssertionError:
-    >>> try: to_names(LETTER_ALEF, mode='foo')
+    >>> try: name(LETTER_ALEF, mode='foo')
     ... except AssertionError, e: print e
     mode must be one of ['unicode', 'const', 'short']
 
-    Characters outside of HebPhonics can be omitted:
-    >>> to_names(LETTER_ALEF + u'\u00C1')
-    ['LETTER_ALEF', 'LATIN_CAPITAL_LETTER_A_WITH_ACUTE']
-    >>> to_names(LETTER_ALEF + u'\u00C1', ignore=True)
+    Characters outside of HebPhonics can be allowed:
+    >>> [name(x, mode='const') for x in LETTER_ALEF + u'\u00C1' if name(x)]
     ['LETTER_ALEF']
+    >>> [name(x, ignore=False, mode='const') for x in LETTER_ALEF + u'\u00C1']
+    ['LETTER_ALEF', 'LATIN_CAPITAL_LETTER_A_WITH_ACUTE']
+
+    >>> name('') is None
+    True
     """
     assert mode in ['unicode', 'const', 'short'], (
         "mode must be one of ['unicode', 'const', 'short']"
     )
+
+    result = None
+    if not char:
+        return result
 
     func = {
         'unicode': _UNICODE_NAME,
@@ -130,7 +139,7 @@ def to_names(uni, ignore=False, mode='const'):
         'short': _SHORT_NAME
     }[mode]
 
-    return [
-        func(char) for char in uni
-        if not ignore or char in _POINTS
-    ]
+    if char in _POINTS or not ignore:
+        result = func(char)
+
+    return result
