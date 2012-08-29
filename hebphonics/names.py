@@ -37,7 +37,8 @@ _RULES = {
     r"(zwj|zero-width-joiner)": 'zwj',
 
     # Dagesh
-    r"(dagesh|mapi[kq]|shuri[kq])": 'dagesh',  # an unclassified dagesh
+    r"(mapi[kq])": 'mapiq',
+    r"(dagesh|shuri[kq])": 'dagesh',  # an unclassified dagesh
     r"dagesh-([kq]al|lene)": 'dagesh-qal',
     r"dagesh-(c?haza[kq]|forte)": 'dagesh-hazaq',
 
@@ -184,8 +185,14 @@ def normalize(name):
     'patah-genuvah'
     >>> normalize('mapiq-hey')
     'mapiq-he'
+
+    >>> normalize(None) is None
+    True
     """
     result = None
+    if not name:
+        return result
+
     needle = name.lower()
     for rule, normal in _NAMES.iteritems():
         if rule.match(needle):
