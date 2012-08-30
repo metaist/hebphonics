@@ -13,9 +13,7 @@ NOTE
     rather than "qamats-qatan").
 """
 
-from . import metadata
-from . import codes as U
-from . import names as N
+from . import metadata, codes as U, names as N
 
 globals().update(metadata.metadata())  # add package metadata
 
