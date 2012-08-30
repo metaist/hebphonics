@@ -7,6 +7,45 @@ from hebphonics import hebrew
 
 
 class TestHebrew(unittest.TestCase):
+    def test_syllabify(self):
+        """Expected to syllabify strings."""
+        test = hebrew.syllabify(u'מַת')
+        expected = [['mem', 'patah', 'sav']]
+        self.assertEqual(test, expected, 'simple closed syllable')
+
+        test = hebrew.syllabify(u'מִי')
+        expected = [['mem', 'hiriq-male']]
+        self.assertEqual(test, expected, 'simple open syllable')
+
+        test = hebrew.syllabify(u'לָרֶדֶת')
+        expected = [['lamed', 'qamats'],
+                    ['resh', 'segol'],
+                    ['dalet', 'segol', 'sav']]
+        self.assertEqual(test, expected, 'simple word')
+
+        test = hebrew.syllabify(u'בְּ/רֵאשִׁית')
+        expected = [['bet', 'dagesh-qal', 'sheva-na', 'resh', 'tsere', 'alef'],
+                    ['shin', 'hiriq-male', 'sav']]
+        self.assertEqual(test, expected, 'should parse basic word')
+
+        test = hebrew.syllabify(u'אֶֽעֱשֶׂהּ־')
+        expected = [['alef', 'segol'],
+                    ['ayin', 'hataf-segol'],
+                    ['sin', 'segol', 'mapiq-he', 'mapiq']]
+        self.assertEqual(test, expected, 'hatafs in own syllables')
+
+        test = hebrew.syllabify(u'אֶֽעֱשֶׂהּ־', hataf_own=False)
+        expected = [['alef', 'segol'],
+                    ['ayin', 'hataf-segol', 'sin', 'segol',
+                    'mapiq-he', 'mapiq']]
+        self.assertEqual(test, expected, 'hatafs merged with next syllable')
+
+        test = hebrew.syllabify(u'וַ/יִּתְפְּרוּ')
+        expected = [['vav', 'patah'],
+                    ['yod', 'dagesh-hazaq', 'hiriq'],
+                    ['sav', 'sheva-nah'],
+                    ['pe', 'dagesh-qal', 'sheva-na', 'resh', 'shuruq']]
+        self.assertEqual(test, expected, 'sheva-nah breaks syllable')
 
     def test_parse_basic(self):
         """Expected to parse strings."""

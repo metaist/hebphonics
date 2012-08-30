@@ -13,8 +13,6 @@ NOTE
     rather than "qamats-qatan").
 """
 
-#import re
-
 from . import metadata
 from . import codes as U
 from . import names as N
@@ -217,18 +215,20 @@ class Cluster(object):
         return self
 
 
-def _parse_letter(cluster, prev, result, isfirst=False):
+def _parse_letter(cluster, prev, result):
     """Returns the cluster resulting from parsing a letter.
 
     Args:
         cluster (Cluster): the current cluster of unparsed tokens
         prev (Cluster): the previously parsed cluster; may be modified
-        isfirst (bool): whether this is the first cluster (default: False)
+        result (Cluster): the current cluster of semi-parsed tokens
 
     Returns:
         (Cluster, Cluster). The previous cluster (with any modifications) and
         the currently parsed cluster.
     """
+    isfirst = not prev
+
     if cluster.letter in [U.LETTER_ALEF, U.LETTER_HE] and cluster.dagesh:
         # {X}: an alef / he followed by a dagesh is a mapiq-
         result.set(
@@ -269,7 +269,7 @@ def _parse_letter(cluster, prev, result, isfirst=False):
     return prev, result
 
 
-def _parse_vowel(point, prev, result, isfirst=False, islast=False):
+def _parse_vowel(point, prev, result, islast=False):
     """Returns the cluster resulting from parsing a vowel.
 
     Args:
@@ -278,13 +278,14 @@ def _parse_vowel(point, prev, result, isfirst=False, islast=False):
         result (Cluster): the current cluster of semi-parsed tokens
 
     Kwargs:
-        isfirst (bool): whether this is the first cluster (default: False)
         islast (bool): whether this is the last cluster (default: False)
 
     Returns:
         (Cluster, Cluster). The previous cluster (with any modifications) and
         the currently parsed cluster.
     """
+    isfirst = not prev
+
     if U.POINT_PATAH == point and islast:
         result.vowel += '-genuvah'
     elif U.POINT_HOLAM_HASER_FOR_VAV == point:
@@ -338,7 +339,6 @@ def _parse(tokens, prev, cluster, islast=False):
         (Cluster, Cluster). The previous cluster (with any modifications) and
         the currently parsed cluster.
     """
-    isfirst = not prev
     letter_name = U.name(cluster.letter).lower()
     if letter_name.startswith('final_'):
         letter_name = letter_name[6:] + '-sofit'
@@ -355,7 +355,7 @@ def _parse(tokens, prev, cluster, islast=False):
         vowel=vowel_name
     )  # best guess
 
-    prev, result = _parse_letter(cluster, prev, result, isfirst=isfirst)
+    prev, result = _parse_letter(cluster, prev, result)
     # letter parsed
 
     if N.NAME_DAGESH == result.dagesh:
@@ -367,8 +367,7 @@ def _parse(tokens, prev, cluster, islast=False):
             # {X}: qamats in non-last word connected by maqafs is -qatan
             result.vowel = N.NAME_QAMATS_QATAN
         else:
-            prev, result = _parse_vowel(point, prev, result,
-                                        isfirst=isfirst, islast=islast)
+            prev, result = _parse_vowel(point, prev, result, islast=islast)
     # niqqud parsed
 
     return prev, result
@@ -425,3 +424,59 @@ def parse(uni):
     """
     return [item for group in clusters(uni)
             for item in group.tolist()]
+
+
+def syllabify(uni, hataf_own=True):
+    """Returns a list of syllables.
+
+    Args:
+        uni (unicode): unicode string
+
+    Kwargs:
+        hataf_own (bool): should hatafs count as their own syllable
+            (default: True)
+
+    Returns:
+        list<list<str>>. List of syllables (a lists of strings).
+    """
+    result, syllable = [], []
+    groups = clusters(uni)
+    syllable_break, last_vowel = False, ''
+
+    for group in groups:
+        last_type = pointtype(last_vowel)
+        syllable_break = (
+            # {X}: syllable break BEFORE and AFTER sheva-nah
+            N.NAME_SHEVA_NAH == group.vowel or
+            N.NAME_SHEVA_NAH == last_vowel or
+
+            # {X}: (optional) syllable break AFTER hataf-vowel
+            (hataf_own and HATAF_VOWEL == last_type) or
+
+            # {X}: syllable break BEFORE a vowel
+            isvowel(group.vowel)
+        ) and not (
+            # {X}: no syllable break AFTER a sheva-na
+            N.NAME_SHEVA_NA == last_vowel or
+
+            # {X}: (optional) no syllable break AFTER hataf-vowel
+            (not hataf_own and HATAF_VOWEL == last_type)
+        )
+
+        if syllable and syllable_break:
+            result.append(syllable)
+            syllable = []
+
+        if (last_vowel.endswith('-male') and
+                N.NAME_HOLAM_MALE != last_vowel):
+            group.letter = None  # ignore the letter after a -male vowel
+
+        syllable += group.tolist()
+        last_vowel = (group.vowel or '')
+
+    # iterated through all groups
+
+    if syllable:  # add the last syllable
+        result.append(syllable)
+
+    return result
