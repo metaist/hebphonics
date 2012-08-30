@@ -11,4 +11,4 @@ from . import metadata
 
 globals().update(metadata.metadata())  # add package metadata
 
-__all__ = ['codes', 'names']
+__all__ = ['codes', 'names', 'hebrew']
