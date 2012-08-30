@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="hebphonics-texts" default="all">
+  <property name="bin.python" value="python" />
+
   <!-- Macro for downloading files -->
   <macrodef name="getlib">
     <attribute name="src" />
@@ -15,6 +17,9 @@
   <!-- Top-level Targets -->
   <target name="all" depends="tanach,siddur"
           description="download all texts" />
+
+  <target name="parse" depends="parse-tanach"
+          description="parse all texts" />
 
   <target name="remove" depends="remove-tanach,remove-siddur"
           description="remove all texts" />
@@ -37,6 +42,12 @@
         <exclude name="*.DH.xml"/>
       </fileset>
     </move>
+  </target>
+
+  <target name="parse-tanach" description="parse Tanach">
+    <exec command="${bin.python}" dir="..">
+      <arg value="-mhebphonics.parsers.tanach" />
+    </exec>
   </target>
 
   <target name="remove-tanach" description="remove Tanach">

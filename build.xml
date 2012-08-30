@@ -39,6 +39,7 @@
 
   <target name="texts" description="download texts">
     <subant antfile="texts/build.xml" target="all" buildpath="./" />
+    <subant antfile="texts/build.xml" target="parse" buildpath="./" />
   </target>
 
   <!-- Testing -->
