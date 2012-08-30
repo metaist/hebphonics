@@ -75,7 +75,7 @@ globals().update(dict((_CONST_NAME(char), char) for char in _POINTS))
 
 
 def normalize(uni):
-    """Return a normalized decomposed unicode string.
+    """Returns a normalized decomposed unicode string.
 
     Args:
         uni (unicode): unicode string
@@ -84,6 +84,38 @@ def normalize(uni):
         unicode. A normalized and decomposed Unicode string.
     """
     return unicodedata.normalize('NFKD', uni)
+
+
+def strip(uni):
+    """Returns the unicode strign with only letters and points.
+
+    Note:
+        Normalization is performed on each character rather than on the entire
+        string.
+
+    Args:
+        uni (unicode): unicode string
+
+    Returns:
+        unicode. A normalized string with only letters and points.
+
+    Examples:
+    >>> strip(LETTER_ALEF) == LETTER_ALEF
+    True
+    >>> strip(LETTER_ALEF + POINT_PATAH) == LETTER_ALEF + POINT_PATAH
+    True
+    >>> strip(LETTER_ALEF+POINT_PATAH + PUNCTUATION_MAQAF) == (LETTER_ALEF +
+    ...     POINT_PATAH)
+    True
+    """
+    result = ''
+    for char in uni:
+        char_name = name(char, mode='const')
+        if (char_name.startswith('LETTER_') or
+                char_name.startswith('POINT_')):
+            result += normalize(char)
+
+    return result
 
 
 def name(char, ignore=True, mode='short'):
