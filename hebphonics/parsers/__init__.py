@@ -7,4 +7,4 @@ from .. import metadata
 
 globals().update(metadata.metadata())  # add package metadata
 
-__all__ = ['tanach']
+__all__ = ['TanachParser']

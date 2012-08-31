@@ -46,7 +46,7 @@
 
   <target name="parse-tanach" description="parse Tanach">
     <exec command="${bin.python}" dir="..">
-      <arg value="-mhebphonics.parsers.tanach" />
+      <arg value="-mhebphonics.parsers.TanachParser" />
     </exec>
   </target>
 
