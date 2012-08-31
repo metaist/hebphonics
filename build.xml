@@ -24,6 +24,7 @@
       <fileset dir="." includes="**/*.*~" defaultexcludes="false" />
       <fileset dir="." includes="MANIFEST" />
       <fileset dir="." includes="dist/" />
+      <fileset dir="." includes="db/*" />
     </delete>
   </target>
 
