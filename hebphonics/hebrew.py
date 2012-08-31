@@ -465,10 +465,6 @@ def syllabify(uni, hataf_own=True):
             result.append(syllable)
             syllable = []
 
-        if (last_vowel.endswith('-male') and
-                N.NAME_HOLAM_MALE != last_vowel):
-            group.letter = None  # ignore the letter after a -male vowel
-
         syllable += group.tolist()
         last_vowel = (group.vowel or '')
 

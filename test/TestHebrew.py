@@ -14,7 +14,7 @@ class TestHebrew(unittest.TestCase):
         self.assertEqual(test, expected, 'simple closed syllable')
 
         test = hebrew.syllabify(u'מִי')
-        expected = [['mem', 'hiriq-male']]
+        expected = [['mem', 'hiriq-male', 'yod']]
         self.assertEqual(test, expected, 'simple open syllable')
 
         test = hebrew.syllabify(u'לָרֶדֶת')
@@ -25,7 +25,7 @@ class TestHebrew(unittest.TestCase):
 
         test = hebrew.syllabify(u'בְּ/רֵאשִׁית')
         expected = [['bet', 'dagesh-qal', 'sheva-na', 'resh', 'tsere', 'alef'],
-                    ['shin', 'hiriq-male', 'sav']]
+                    ['shin', 'hiriq-male', 'yod', 'sav']]
         self.assertEqual(test, expected, 'should parse basic word')
 
         test = hebrew.syllabify(u'אֶֽעֱשֶׂהּ־')
