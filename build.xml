@@ -24,6 +24,12 @@
       <fileset dir="." includes="**/*.*~" defaultexcludes="false" />
       <fileset dir="." includes="MANIFEST" />
       <fileset dir="." includes="dist/" />
+    </delete>
+  </target>
+  
+  <target name="clean-db" description="remove generated database">
+    <delete verbose="true" quiet="true" failonerror="false"
+            includeemptydirs="true">
       <fileset dir="." includes="db/*" />
     </delete>
   </target>
