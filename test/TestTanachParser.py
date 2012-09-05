@@ -17,3 +17,7 @@ class TestTanachParser(unittest.TestCase):
         """Expected to parse basic texts."""
         root = os.path.join('test', 'texts')
         TanachParser.parse(self.session, root, 'Index.xml')
+
+        books = self.session.query(db.Book).all()
+        self.assertEqual(len(books), 2, 'expected to have 2 books')
+        self.assertEqual(books[0].name, '1 TestBook', 'expected to get name')
