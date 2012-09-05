@@ -25,19 +25,18 @@ class Occurence(Base):
     book_id = Column(Integer, ForeignKey('books.id'), primary_key=True)
     word_id = Column(Integer, ForeignKey('words.id'), primary_key=True)
 
-    word = relationship('Word', backref='occurences')
-    first_pos = Column(String)
     frequency = Column(Integer, default=1)
+    word = relationship('Word', backref='occurences')
 
     def __repr__(self):
         """Return string representation of the class.
 
         Example:
         >>> repr(Occurence())
-        'Occurence(word=None, book=None, first_pos=None, frequency=None)'
+        'Occurence(word=None, book=None, frequency=None)'
         """
         result = ('Occurence(word={0.word}, book={0.book}, '
-                  'first_pos={0.first_pos}, frequency={0.frequency})')
+                  'frequency={0.frequency})')
         return result.format(self)
 
 
