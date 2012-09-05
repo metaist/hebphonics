@@ -16,4 +16,4 @@ globals().update(metadata.metadata())  # add package metadata
 __all__ = ['codes', 'names', 'hebrew']
 
 logging.basicConfig(level=logging.INFO,
-                    format='%(levelname)s %(name)s - %(message)s')
+                    format='%(asctime)s %(levelname)s %(module)s %(message)s')
