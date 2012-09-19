@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="hebphonics" default="all">
   <!-- Executables -->
+  <condition property="bin.ext" value=".bat" else="">
+    <os family="windows" />
+  </condition>
+
   <property name="bin.nose" value="nosetests" />
   <property name="bin.pep8" value="pep8" />
   <property name="bin.pip" value="pip" />
-  <property name="bin.pylint" value="pylint" />
+  <property name="bin.pylint" value="pylint${bin.ext}" />
   <property name="bin.python" value="python" />
 
   <property name="project.package" value="hebphonics" />
@@ -26,7 +30,7 @@
       <fileset dir="." includes="dist/" />
     </delete>
   </target>
-  
+
   <target name="clean-db" description="remove generated database">
     <delete verbose="true" quiet="true" failonerror="false"
             includeemptydirs="true">
