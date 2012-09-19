@@ -107,7 +107,7 @@ def count(xml_book):
     """
     result = {}
 
-    xml_book = xml_book.Tanach.tanach.book
+    xml_book = xml_book.Tanach.tanach.book  # pylint: disable=E1101
     xml_words = xml_book.find_all('w')
 
     name = xml_book.names.find_all('name')[0].string
@@ -150,7 +150,9 @@ def parse(session, root, root_file='Tanach.xml'):
     xml_index = BeautifulSoup(open(path), 'xml')
     logger.info(MSG_PARSED, 'index')
 
-    xml_books = xml_index.Tanach.find_all('index')[0].books
+    xml_books = xml_index.Tanach.find_all('index')  # pylint: disable=E1101
+    xml_books = xml_books[0].books
+
     for xml_book in xml_books.find_all('names'):
         book_path = os.path.join(root, xml_book.filename.string + '.xml')
         with open(book_path) as stream:
