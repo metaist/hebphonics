@@ -106,6 +106,7 @@ GEMATRIA_VALUES = {
     U.LETTER_TAV: 400
 }
 
+
 def pointtype(point):
     """Return the type of point or None.
 

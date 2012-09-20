@@ -7,6 +7,20 @@ from hebphonics import hebrew
 
 
 class TestHebrew(unittest.TestCase):
+    def test_gematria(self):
+        """Expected to compute gematria."""
+        test = hebrew.gematria(u'בְּ/רֵאשִׁית')
+        expected = 2 + 200 + 1 + 300 + 10 + 400
+        self.assertEqual(test, expected)
+
+        test = hebrew.gematria(u'מַת')
+        expected = 40 + 400
+        self.assertEqual(test, expected)
+
+        test = hebrew.gematria(u'מִי')
+        expected = 40 + 10
+        self.assertEqual(test, expected)
+
     def test_syllabify(self):
         """Expected to syllabify strings."""
         test = hebrew.syllabify(u'מַת')
