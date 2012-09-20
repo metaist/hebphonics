@@ -3,10 +3,12 @@
 
 """HebPhonics database."""
 
+import re
+import sqlalchemy
 from sqlalchemy import create_engine, Column, ForeignKey
-from sqlalchemy.types import Integer, String, Unicode
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship
+from sqlalchemy.types import Integer, String, Unicode
 
 from . import metadata
 
@@ -92,4 +94,8 @@ def connect(database=DEFAULT_DB, debug=False):
     """
     engine = create_engine('sqlite:///' + database, echo=debug)
     Base.metadata.create_all(engine)
-    return Session(bind=engine)
+    session = Session(bind=engine)
+
+    regexp = lambda expr, item: re.search(expr, item, re.I + re.U) is not None
+    session.connection().connection.create_function('regexp', 2, regexp)
+    return session
