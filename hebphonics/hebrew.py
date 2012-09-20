@@ -75,6 +75,37 @@ POINT_TYPES = {
 }
 
 
+### Gematria Values ###
+GEMATRIA_VALUES = {
+    U.LETTER_ALEF: 1,
+    U.LETTER_BET: 2,
+    U.LETTER_GIMEL: 3,
+    U.LETTER_DALET: 4,
+    U.LETTER_HE: 5,
+    U.LETTER_VAV: 6,
+    U.LETTER_ZAYIN: 7,
+    U.LETTER_HET: 8,
+    U.LETTER_TET: 9,
+    U.LETTER_YOD: 10,
+    U.LETTER_KAF: 20,
+    U.LETTER_FINAL_KAF: 20,
+    U.LETTER_LAMED: 30,
+    U.LETTER_MEM: 40,
+    U.LETTER_FINAL_MEM: 40,
+    U.LETTER_NUN: 50,
+    U.LETTER_FINAL_NUN: 50,
+    U.LETTER_SAMEKH: 60,
+    U.LETTER_AYIN: 70,
+    U.LETTER_PE: 80,
+    U.LETTER_FINAL_PE: 80,
+    U.LETTER_TSADI: 90,
+    U.LETTER_FINAL_TSADI: 90,
+    U.LETTER_QOF: 100,
+    U.LETTER_RESH: 200,
+    U.LETTER_SHIN: 300,
+    U.LETTER_TAV: 400
+}
+
 def pointtype(point):
     """Return the type of point or None.
 
@@ -126,6 +157,22 @@ def isvowel(point):
     True
     """
     return pointtype(point) in [HATAF_VOWEL, SHORT_VOWEL, LONG_VOWEL]
+
+
+def gematria(uni):
+    """Return the numerical value of a Hebrew string.
+
+    Args:
+        uni (unicode): unicode string
+
+    Returns:
+        int. numerical value of the string
+    """
+    return sum([
+        GEMATRIA_VALUES[letter]
+        for letter in uni
+        if letter in GEMATRIA_VALUES
+    ])
 
 
 class Cluster(object):
