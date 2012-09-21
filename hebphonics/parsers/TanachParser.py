@@ -83,6 +83,7 @@ def save(session, name, counts):
         if not db_word:  # first occurence of word ever
             syllables = hebrew.syllabify(uni_word)
             db_word = db.Word(hebrew=stripped,
+                              gematria=hebrew.gematria(stripped),
                               syllables=str(syllables))
 
         db_rel = db.Occurence(frequency=frequency)

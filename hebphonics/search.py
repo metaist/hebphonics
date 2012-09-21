@@ -4,7 +4,7 @@
 """High-level HebPhonics functions.
 """
 
-from . import metadata, db, hebrew
+from . import metadata, db
 
 globals().update(metadata.metadata())  # add package metadata
 
@@ -21,6 +21,46 @@ SHEMOT_REGEX = u'(' + u')|('.join([
 ]) + u')'
 
 
+def _filter_gematria(query, criteria):
+    """Return a query filtered by gematria.
+
+    Args:
+        query (Query): query to filter
+        criteria (int, tuple, list, or dict):
+            if an int - the exact value to filter
+            if a tuple - the min, max (exclusive)
+            if a list - the min, max (inclusive)
+            if a dict - a list of operators (__eq__, __lt__, __gt__, __le__,
+                __ge__) mapped to values
+
+    Returns:
+        Query. the given query filtered by the given filter
+    """
+    g_filter = {}
+    g_type = type(criteria)
+
+    if g_type is int:
+        g_filter['__eq__'] = criteria
+    elif g_type in [tuple, list]:
+        g_len = len(criteria)
+        op_min, op_max = '__gt__', '__lt__'
+
+        if g_type is list:
+            op_min, op_max = '__ge__', '__le__'
+        if g_len > 0:
+            g_filter[op_min] = criteria[0]
+        if g_len > 1:
+            g_filter[op_max] = criteria[1]
+    elif g_type is dict:
+        g_filter = criteria
+
+    for operator, val in g_filter.items():
+        operator = getattr(db.Word.gematria, operator)
+        query = query.filter(operator(val))
+
+    return query
+
+
 def search(session, limit=1000, **kwargs):
     """Return a list of Words that match the search criteria.
 
@@ -31,13 +71,15 @@ def search(session, limit=1000, **kwargs):
         limit (int): maximum number of results (default: 1000)
 
         search_books (list).
-        search_shemot (bool).
+        search_shemot (bool): if True, only search within names of G-d
+
         letters_any (list).
         letters_all (list).
         letters_none (list).
         letters_seq (list).
-        filter_shemot (bool).
-        #filter_gematria (list).
+
+        filter_shemot (bool): if True, exclude names of G-d
+        filter_gematria (int): if given, only include words equal to the value
 
     Returns:
         list<Word>. Words that match the criteria.
@@ -46,22 +88,31 @@ def search(session, limit=1000, **kwargs):
 
     get = lambda obj, idx: ((idx in obj) and obj[idx]) or None
 
+    # Search
     #search_books = get(kwargs, 'search_books')
     search_shemot = get(kwargs, 'search_shemot')
+
+    if search_shemot:
+        query = query.filter(db.Word.hebrew.op('REGEXP')(SHEMOT_REGEX))
+
+    # Letters
 
     #letters_any = get(kwargs, 'letters_any')
     #letters_all = get(kwargs, 'letters_all')
     #letters_none = get(kwargs, 'letters_none')
     #letters_seq = get(kwargs, 'letters_seq')
 
+    # Filters
     filter_shemot = get(kwargs, 'filter_shemot')
-
-    if search_shemot:
-        query = query.filter(db.Word.hebrew.op('REGEXP')(SHEMOT_REGEX))
+    filter_gematria = get(kwargs, 'filter_gematria')
 
     if filter_shemot:
         query = query.filter(db.Word.hebrew.op('NOT REGEXP')(SHEMOT_REGEX))
 
+    if filter_gematria:
+        query = _filter_gematria(query, filter_gematria)
+
+    # Limits
     if limit:
         query = query.limit(limit)
 

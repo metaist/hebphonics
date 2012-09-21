@@ -7,7 +7,7 @@ import unittest
 
 from sqlalchemy.orm.session import Session
 
-from hebphonics import db, search
+from hebphonics import db, hebrew, search
 
 
 class TestSearch(unittest.TestCase):
@@ -57,3 +57,29 @@ class TestSearch(unittest.TestCase):
         query = search.search(self.session, filter_shemot=True)
         for test in query:
             self.assertTrue(regex.search(test.hebrew) is None)
+
+    def test_gematria_filter(self):
+        """Expected to filter words based on gematria."""
+        value = 10
+        query = search.search(self.session, filter_gematria=value)
+        for test in query:
+            self.assertTrue(test.gematria, hebrew.gematria(test.hebrew))
+
+        value = (10, 20)
+        query = search.search(self.session, filter_gematria=value)
+        for test in query:
+            gematria = hebrew.gematria(test.hebrew)
+            print gematria
+            self.assertTrue(10 < gematria < 20)
+
+        value = [10, 20]
+        query = search.search(self.session, filter_gematria=value)
+        for test in query:
+            gematria = hebrew.gematria(test.hebrew)
+            self.assertTrue(10 <= gematria <= 20)
+
+        value = {'__gt__': 10, '__le__': 20}
+        query = search.search(self.session, filter_gematria=value)
+        for test in query:
+            gematria = hebrew.gematria(test.hebrew)
+            self.assertTrue(10 < gematria <= 20)
