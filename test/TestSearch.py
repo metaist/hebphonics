@@ -8,15 +8,15 @@ import unittest
 from sqlalchemy.orm.session import Session
 
 from hebphonics import db, hebrew, search
+from hebphonics.parsers import TanachParser
 
 
 class TestSearch(unittest.TestCase):
-    session = None
-
     def setUp(self):
         """Setup connection."""
-        path = os.path.join('db', 'hebphonics.db')
-        self.session = db.connect(database=path)
+        self.session = db.connect(database=db.DEFAULT_DB, debug=True)
+        root = os.path.join('test', 'texts')
+        TanachParser.parse(self.session, root, 'Index.xml')
 
     def test_no_filter(self):
         """Expected to do basic search."""
