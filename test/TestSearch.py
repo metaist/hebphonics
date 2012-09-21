@@ -83,3 +83,30 @@ class TestSearch(unittest.TestCase):
         for test in query:
             gematria = hebrew.gematria(test.hebrew)
             self.assertTrue(10 < gematria <= 20)
+
+    def test_syllen_filter(self):
+        """Expected to filter words based on syllable length."""
+        value = 1
+        query = search.search(self.session, filter_syllen=value)
+        for test in query:
+            self.assertEqual(test.syllen, 1)
+
+        value = [1]
+        query = search.search(self.session, filter_syllen=value)
+        for test in query:
+            self.assertEqual(test.syllen, 1)
+
+        value = 2
+        query = search.search(self.session, filter_syllen_hatafs=value)
+        for test in query:
+            self.assertEqual(test.syllen_hatafs, 2)
+
+        value = [2]
+        query = search.search(self.session, filter_syllen_hatafs=value)
+        for test in query:
+            self.assertEqual(test.syllen_hatafs, 2)
+
+        value = [2, 3]
+        query = search.search(self.session, filter_syllen_hatafs=value)
+        for test in query:
+            self.assertTrue(test.syllen_hatafs in value)

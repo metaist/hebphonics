@@ -80,6 +80,10 @@ def search(session, limit=1000, **kwargs):
 
         filter_shemot (bool): if True, exclude names of G-d
         filter_gematria (int): if given, only include words equal to the value
+        filter_syllen (list[int]): if given, only include words with these
+            syllable lengths
+        filter_frequency (list[int]): if given, only include words with these
+            frequencies (0=rare, 5=extremely common)
 
     Returns:
         list<Word>. Words that match the criteria.
@@ -105,12 +109,26 @@ def search(session, limit=1000, **kwargs):
     # Filters
     filter_shemot = get(kwargs, 'filter_shemot')
     filter_gematria = get(kwargs, 'filter_gematria')
+    filter_syllen = get(kwargs, 'filter_syllen')
+    filter_syllen_hatafs = get(kwargs, 'filter_syllen_hatafs')
 
     if filter_shemot:
         query = query.filter(db.Word.hebrew.op('NOT REGEXP')(SHEMOT_REGEX))
 
     if filter_gematria:
         query = _filter_gematria(query, filter_gematria)
+
+    if filter_syllen:
+        if type(filter_syllen) is int:
+            filter_syllen = [filter_syllen]
+
+        query = query.filter(db.Word.syllen.in_(filter_syllen))
+
+    if filter_syllen_hatafs:
+        if type(filter_syllen_hatafs) is int:
+            filter_syllen_hatafs = [filter_syllen_hatafs]
+
+        query = query.filter(db.Word.syllen_hatafs.in_(filter_syllen_hatafs))
 
     # Limits
     if limit:
