@@ -472,41 +472,43 @@ def parse(uni):
             for item in group.tolist()]
 
 
-def syllabify(uni, hataf_own=True):
+def syllabify(uni=None, groups=None, strict=False):
     """Returns a list of syllables.
 
-    Args:
-        uni (unicode): unicode string
+    Either a unicode string (uni) or a list of clusters (groups) must be
+    provided.
 
     Kwargs:
-        hataf_own (bool): should hatafs count as their own syllable
-            (default: True)
+        uni (unicode): unicode string (default: None)
+        groups (list<Cluster>): list of cluster (default: None)
+        strict (bool): if True, follow rules of havarot (default: False)
 
     Returns:
         list<list<str>>. List of syllables (a lists of strings).
     """
+    assert (uni or clusters), 'must provide a unicode string or clusters'
     result, syllable = [], []
-    groups = clusters(uni)
+    groups = groups or clusters(uni)
     syllable_break, last_vowel = False, ''
 
     for group in groups:
+        curr_type = pointtype(group.vowel)
         last_type = pointtype(last_vowel)
         syllable_break = (
-            # {X}: syllable break BEFORE and AFTER sheva-nah
-            N.NAME_SHEVA_NAH == group.vowel or
-            N.NAME_SHEVA_NAH == last_vowel or
+            # {X}: syllable break BEFORE a any vowel
+            isvowel(group.vowel) or
 
-            # {X}: (optional) syllable break AFTER hataf-vowel
-            (hataf_own and HATAF_VOWEL == last_type) or
+            # {X}: (lax) syllable break BEFORE hataf-vowel
+            (not strict and HATAF_VOWEL == curr_type) or
 
-            # {X}: syllable break BEFORE a vowel
-            isvowel(group.vowel)
+            # {X}: syllable break AFTER sheva-nah
+            N.NAME_SHEVA_NAH == last_vowel
         ) and not (
             # {X}: no syllable break AFTER a sheva-na
             N.NAME_SHEVA_NA == last_vowel or
 
-            # {X}: (optional) no syllable break AFTER hataf-vowel
-            (not hataf_own and HATAF_VOWEL == last_type)
+            # {X}: (strict) no syllable break AFTER hataf-vowel
+            (strict and HATAF_VOWEL == last_type)
         )
 
         if syllable and syllable_break:

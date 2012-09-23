@@ -81,8 +81,9 @@ def save(session, name, counts):
                          .first()
 
         if not db_word:  # first occurence of word ever
-            syllables = hebrew.syllabify(uni_word)
-            syllables_hatafs = hebrew.syllabify(uni_word, hataf_own=False)
+            groups = hebrew.clusters(uni_word)
+            syllables = hebrew.syllabify(groups=groups, strict=True)
+            syllables_hatafs = hebrew.syllabify(groups=groups, strict=False)
             db_word = db.Word(hebrew=stripped,
                               gematria=hebrew.gematria(stripped),
                               syllables=str(syllables),

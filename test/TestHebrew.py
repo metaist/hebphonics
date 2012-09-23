@@ -48,7 +48,7 @@ class TestHebrew(unittest.TestCase):
                     ['sin', 'segol', 'mapiq-he', 'mapiq']]
         self.assertEqual(test, expected, 'hatafs in own syllables')
 
-        test = hebrew.syllabify(u'אֶֽעֱשֶׂהּ־', hataf_own=False)
+        test = hebrew.syllabify(u'אֶֽעֱשֶׂהּ־', strict=True)
         expected = [['alef', 'segol'],
                     ['ayin', 'hataf-segol', 'sin', 'segol',
                     'mapiq-he', 'mapiq']]
@@ -56,10 +56,9 @@ class TestHebrew(unittest.TestCase):
 
         test = hebrew.syllabify(u'וַ/יִּתְפְּרוּ')
         expected = [['vav', 'patah'],
-                    ['yod', 'dagesh-hazaq', 'hiriq'],
-                    ['sav', 'sheva-nah'],
+                    ['yod', 'dagesh-hazaq', 'hiriq', 'sav', 'sheva-nah'],
                     ['pe', 'dagesh-qal', 'sheva-na', 'resh', 'shuruq']]
-        self.assertEqual(test, expected, 'sheva-nah breaks syllable')
+        self.assertEqual(test, expected, 'sheva-nah does not break syllable')
 
     def test_parse_basic(self):
         """Expected to parse basic strings."""
