@@ -25,6 +25,17 @@ class TestSearch(unittest.TestCase):
         test = [item for item in query]
         self.assertEqual(len(test), limit)
 
+    def test_search_books(self):
+        """Expected to search within certain books."""
+        query = search.search(self.session, search_books='2 TestBook')
+        test = query.all()
+        self.assertTrue(len(test) > 0)
+
+        query = search.search(self.session,
+                              search_books=['1 TestBook', '2 TestBook'])
+        test = query.all()
+        self.assertTrue(len(test) > 0)
+
     def test_shemot_search_and_filter(self):
         """Expected to search and filter out shemot."""
         query = search.search(self.session, search_shemot=True)

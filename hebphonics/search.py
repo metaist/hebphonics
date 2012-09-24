@@ -81,8 +81,15 @@ def search(session, limit=1000, **kwargs):
     get = lambda obj, idx: ((idx in obj) and obj[idx]) or None
 
     # Search
-    #search_books = get(kwargs, 'search_books')
+    search_books = get(kwargs, 'search_books')
     search_shemot = get(kwargs, 'search_shemot')
+
+    if search_books:
+        if type(search_books) is str:
+            search_books = [search_books]
+
+        query = query.join(db.Occurrence, db.Book)\
+                     .filter(db.Book.name.in_(search_books))
 
     if search_shemot:
         query = query.filter_by(shemot=True)
