@@ -85,6 +85,7 @@ def save(session, name, counts):
             syllables = hebrew.syllabify(groups=groups, strict=True)
             syllables_hatafs = hebrew.syllabify(groups=groups, strict=False)
             db_word = db.Word(hebrew=stripped,
+                              shemot=hebrew.isshemot(uni_word),
                               gematria=hebrew.gematria(stripped),
                               syllables=str(syllables),
                               syllen=len(syllables),

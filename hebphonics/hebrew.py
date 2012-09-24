@@ -13,6 +13,8 @@ NOTE
     rather than "qamats-qatan").
 """
 
+import re
+
 from . import metadata, codes as U, names as N
 
 globals().update(metadata.metadata())  # add package metadata
@@ -106,6 +108,18 @@ GEMATRIA_VALUES = {
     U.LETTER_TAV: 400
 }
 
+# In Judaism, printing shem-haShem (name of G-d) carries additional
+# obligations. This regex matches the seven special names of G-d.
+SHEMOT_REGEX = u'(' + u')|('.join([
+    u'א(ֱ)?ל(ו)?ֹה',  # Shem Elokah
+    u'א(.)?ד(ו)?ֹנ[ָ|ַ]י$',  # Shem Adnuth
+    u'י(ְ)?הו[ָ|ִ]ה',  # Shem HaVayah
+    u'([^י]|^)שׁ[ַ|ָ]ד(ּ)?[ָ|ַ]י$',  # Shakai
+    u'^אֵל(.)?$',  # Kel
+    u'^יָהּ$',  # Kah
+    u'^צְבָאוֹת$'  # Tzvakot
+]) + u')'
+
 
 def pointtype(point):
     """Return the type of point or None.
@@ -174,6 +188,18 @@ def gematria(uni):
         for letter in uni
         if letter in GEMATRIA_VALUES
     ])
+
+
+def isshemot(uni):
+    """Returns True if the given unicode string contains a name of G-d.
+
+    Args:
+        uni (unicode): word to check
+
+    Returns:
+        bool. True if the word is a name of G-d.
+    """
+    return re.search(SHEMOT_REGEX, uni, re.I + re.U) is not None
 
 
 class Cluster(object):

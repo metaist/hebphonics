@@ -21,6 +21,26 @@ class TestHebrew(unittest.TestCase):
         expected = 40 + 10
         self.assertEqual(test, expected)
 
+    def test_isshemot(self):
+        """Expected to correctly identify names of G-d."""
+        test = u'אֱלֹהִים'
+        self.assertTrue(hebrew.isshemot(test))
+
+        test = u'בֵאלֹהִים'
+        self.assertTrue(hebrew.isshemot(test))
+
+        test = u'אֱלוֹהֵי'
+        self.assertTrue(hebrew.isshemot(test))
+
+        test = u'אֱלוֹהַי'
+        self.assertTrue(hebrew.isshemot(test))
+
+        test = u'אֵל'
+        self.assertTrue(hebrew.isshemot(test))
+
+        test = u'אֵלַי'
+        self.assertFalse(hebrew.isshemot(test), 'should not match')
+
     def test_syllabify(self):
         """Expected to syllabify strings."""
         test = hebrew.syllabify(u'מַת')

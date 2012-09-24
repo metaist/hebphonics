@@ -8,18 +8,6 @@ from . import metadata, db
 
 globals().update(metadata.metadata())  # add package metadata
 
-# In Judaism, printing shem-haShem (name of G-d) carries additional
-# obligations. This regex matches the seven special names of G-d.
-SHEMOT_REGEX = u'(' + u')|('.join([
-    u'א(ֱ)?ל(ו)?ֹה',  # Shem Elokah
-    u'א(.)?ד(ו)?ֹנ[ָ|ַ]י$',  # Shem Adnuth
-    u'י(ְ)?הו[ָ|ִ]ה',  # Shem HaVayah
-    u'([^י]|^)שׁ[ַ|ָ]ד(ּ)?[ָ|ַ]י$',  # Shakai
-    u'^אֵל(.)?$',  # Kel
-    u'^יָהּ$',  # Kah
-    u'^צְבָאוֹת$'  # Tzvakot
-]) + u')'
-
 
 def _filter_gematria(query, criteria):
     """Return a query filtered by gematria.
@@ -97,7 +85,7 @@ def search(session, limit=1000, **kwargs):
     search_shemot = get(kwargs, 'search_shemot')
 
     if search_shemot:
-        query = query.filter(db.Word.hebrew.op('REGEXP')(SHEMOT_REGEX))
+        query = query.filter(db.Word.shemot == int(True))
 
     # Letters
 
@@ -113,7 +101,7 @@ def search(session, limit=1000, **kwargs):
     filter_syllen_hatafs = get(kwargs, 'filter_syllen_hatafs')
 
     if filter_shemot:
-        query = query.filter(db.Word.hebrew.op('NOT REGEXP')(SHEMOT_REGEX))
+        query = query.filter(db.Word.shemot == int(False))
 
     if filter_gematria:
         query = _filter_gematria(query, filter_gematria)

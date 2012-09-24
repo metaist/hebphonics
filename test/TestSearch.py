@@ -25,38 +25,15 @@ class TestSearch(unittest.TestCase):
         test = [item for item in query]
         self.assertEqual(len(test), limit)
 
-    def test_shemot_regex(self):
-        """Expected to correctly identify names of G-d."""
-        regex = re.compile(search.SHEMOT_REGEX, re.I + re.U)
-
-        test = u'אֱלֹהִים'
-        self.assertTrue(regex.search(test) is not None)
-
-        test = u'בֵאלֹהִים'
-        self.assertTrue(regex.search(test) is not None)
-
-        test = u'אֱלוֹהֵי'
-        self.assertTrue(regex.search(test) is not None)
-
-        test = u'אֱלוֹהַי'
-        self.assertTrue(regex.search(test) is not None)
-
-        test = u'אֵל'
-        self.assertTrue(regex.search(test) is not None)
-
-        test = u'אֵלַי'
-        self.assertTrue(regex.search(test) is None, 'should not match')
-
     def test_shemot_search_and_filter(self):
-        """Expected to filter out shemot."""
-        regex = re.compile(search.SHEMOT_REGEX, re.I + re.U)
+        """Expected to search and filter out shemot."""
         query = search.search(self.session, search_shemot=True)
         for test in query:
-            self.assertTrue(regex.search(test.hebrew) is not None)
+            self.assertTrue(hebrew.isshemot(test.hebrew))
 
         query = search.search(self.session, filter_shemot=True)
         for test in query:
-            self.assertTrue(regex.search(test.hebrew) is None)
+            self.assertFalse(hebrew.isshemot(test.hebrew))
 
     def test_gematria_filter(self):
         """Expected to filter words based on gematria."""

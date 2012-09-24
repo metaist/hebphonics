@@ -6,7 +6,7 @@
 from sqlalchemy import create_engine, Column, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship
-from sqlalchemy.types import Integer, String, Unicode
+from sqlalchemy.types import Boolean, Integer, String, Unicode
 import re
 
 from . import metadata
@@ -65,6 +65,7 @@ class Word(Base):
 
     id = Column(Integer, primary_key=True)
     hebrew = Column(Unicode, unique=True)
+    shemot = Column(Boolean)  # whether or not this word is shemot
     gematria = Column(Integer)  # numerical value of the word
     syllables = Column(String)
     syllen = Column(Integer)  # number of syllables
@@ -74,13 +75,13 @@ class Word(Base):
         """Return string representation of the class.
 
         Example:
-        >>> repr(Word()) == ('Word(hebrew=None, gematria=None, '
+        >>> repr(Word()) == ('Word(hebrew=None, shemot=None, gematria=None, '
         ... 'syllables=None, syllen=None, syllen_hatafs=None)')
         True
         """
-        result = ('Word(hebrew={0.hebrew!r}, gematria={0.gematria}, '
-                  'syllables={0.syllables}, syllen={0.syllen}, '
-                  'syllen_hatafs={0.syllen_hatafs})')
+        result = ('Word(hebrew={0.hebrew!r}, shemot={0.shemot}, '
+                  'gematria={0.gematria}, syllables={0.syllables}, '
+                  'syllen={0.syllen}, syllen_hatafs={0.syllen_hatafs})')
         return result.format(self)
 
 
