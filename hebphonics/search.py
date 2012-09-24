@@ -85,7 +85,7 @@ def search(session, limit=1000, **kwargs):
     search_shemot = get(kwargs, 'search_shemot')
 
     if search_shemot:
-        query = query.filter(db.Word.shemot == int(True))
+        query = query.filter_by(shemot=True)
 
     # Letters
 
@@ -101,7 +101,7 @@ def search(session, limit=1000, **kwargs):
     filter_syllen_hatafs = get(kwargs, 'filter_syllen_hatafs')
 
     if filter_shemot:
-        query = query.filter(db.Word.shemot == int(False))
+        query = query.filter_by(shemot=False)
 
     if filter_gematria:
         query = _filter_gematria(query, filter_gematria)
