@@ -24,7 +24,7 @@ class TestDB(unittest.TestCase):
     def test_model_basic_add(self):
         """Expected to perform basic addition."""
         book1 = db.Book(name="book1")
-        occurrence1 = db.Occurence(frequency=5)
+        occurrence1 = db.Occurrence(frequency=5)
         word = db.Word(hebrew=u"example")
         occurrence1.word = word
         book1.words.append(occurrence1)
@@ -36,7 +36,7 @@ class TestDB(unittest.TestCase):
         """Expected to add the same word to multiple books."""
 
         book1 = db.Book(name="book1")
-        occurrence1 = db.Occurence(frequency=5)
+        occurrence1 = db.Occurrence(frequency=5)
         word = db.Word(hebrew=u"example")
         occurrence1.word = word
         book1.words.append(occurrence1)
@@ -45,7 +45,7 @@ class TestDB(unittest.TestCase):
         self.session.commit()
 
         book2 = db.Book(name="book2")
-        occurrence2 = db.Occurence(frequency=5)
+        occurrence2 = db.Occurrence(frequency=5)
         occurrence2.word = word  # same word!
         book2.words.append(occurrence2)
 

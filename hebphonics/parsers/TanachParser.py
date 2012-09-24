@@ -80,7 +80,7 @@ def save(session, name, counts):
                          .filter_by(hebrew=stripped)\
                          .first()
 
-        if not db_word:  # first occurence of word ever
+        if not db_word:  # first occurrence of word ever
             groups = hebrew.clusters(uni_word)
             syllables = hebrew.syllabify(groups=groups, strict=True)
             syllables_hatafs = hebrew.syllabify(groups=groups, strict=False)
@@ -91,7 +91,7 @@ def save(session, name, counts):
                               syllen=len(syllables),
                               syllen_hatafs=len(syllables_hatafs))
 
-        db_rel = db.Occurence(frequency=frequency)
+        db_rel = db.Occurrence(frequency=frequency)
         db_rel.word = db_word
         db_book.words.append(db_rel)  # pylint: disable=E1101
 

@@ -19,24 +19,24 @@ DEFAULT_DB = ':memory:'
 Base = declarative_base()
 
 
-class Occurence(Base):
-    """Occurences of a word in a book."""
-    __tablename__ = 'occurences'
+class Occurrence(Base):
+    """Occurrences of a word in a book."""
+    __tablename__ = 'occurrences'
 
     book_id = Column(Integer, ForeignKey('books.id'), primary_key=True)
     word_id = Column(Integer, ForeignKey('words.id'), primary_key=True)
 
     frequency = Column(Integer, default=1)
-    word = relationship('Word', backref='occurences')
+    word = relationship('Word', backref='occurrences')
 
     def __repr__(self):
         """Return string representation of the class.
 
         Example:
-        >>> repr(Occurence())
-        'Occurence(word=None, book=None, frequency=None)'
+        >>> repr(Occurrence())
+        'Occurrence(word=None, book=None, frequency=None)'
         """
-        result = ('Occurence(word={0.word}, book={0.book}, '
+        result = ('Occurrence(word={0.word}, book={0.book}, '
                   'frequency={0.frequency})')
         return result.format(self)
 
@@ -47,7 +47,7 @@ class Book(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
-    words = relationship('Occurence', backref='book')
+    words = relationship('Occurrence', backref='book')
 
     def __repr__(self):
         """Return string representation of the class.
