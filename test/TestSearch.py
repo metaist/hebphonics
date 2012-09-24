@@ -12,8 +12,11 @@ from hebphonics.parsers import TanachParser
 
 
 class TestSearch(unittest.TestCase):
-    def setUp(self):
+
+    #def setUp(self):
+    def __init__(self, *args):
         """Setup connection."""
+        unittest.TestCase.__init__(self, *args)
         self.session = db.connect(database=db.DEFAULT_DB, debug=True)
         root = os.path.join('test', 'texts')
         TanachParser.parse(self.session, root, 'Index.xml')
@@ -45,6 +48,38 @@ class TestSearch(unittest.TestCase):
         query = search.search(self.session, filter_shemot=True)
         for test in query:
             self.assertFalse(hebrew.isshemot(test.hebrew))
+
+    def test_letter_filters(self):
+        """Expected to filter words based on letter criteria."""
+        value = 'alef'
+        query = search.search(self.session, letters_any=value)
+        for test in query:
+            self.assertTrue(value in test.syllables)
+
+        value = ['alef', 'bet']
+        query = search.search(self.session, letters_any=value)
+        for test in query:
+            self.assertTrue(value[0] in test.syllables or
+                            value[1] in test.syllables)
+
+        value = ['alef', 'bet']
+        query = search.search(self.session, letters_all=value)
+        for test in query:
+            self.assertTrue(value[0] in test.syllables and
+                            value[1] in test.syllables)
+
+        value = ['alef', 'bet']
+        query = search.search(self.session, letters_none=value)
+        for test in query:
+            self.assertTrue(value[0] not in test.syllables and
+                            value[1] not in test.syllables)
+
+        value = ['resh', 'alef', 'shin']
+        query = search.search(self.session, letters_seq=value)
+        for test in query:
+            self.assertTrue(value[0] in test.syllables and
+                            value[1] in test.syllables and
+                            value[2] in test.syllables)
 
     def test_gematria_filter(self):
         """Expected to filter words based on gematria."""
