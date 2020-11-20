@@ -1,0 +1,28 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "*"
+coverage = "*"
+pylint = "*"
+pytest = "*"
+grip = "*"
+
+[packages]
+blinker = "*"
+flask = "*"
+flask-dance = {extras = ["sqla"], version = "*"}
+flask-login = "*"
+flask-sqlalchemy = "*"
+beautifulsoup4 = "*"
+lxml = "*"
+tqdm = "*"
+python-dotenv = "*"
+
+[requires]
+python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true

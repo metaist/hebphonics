@@ -1,0 +1,87 @@
+.hebrew {
+  font-family: "SBL Hebrew", serif;
+  font-size: 200%;
+}
+
+.state-empty {
+  .when-empty {
+    display: block;
+    margin-top: 5rem;
+  }
+
+  .when-full {
+    display: none;
+  }
+}
+
+.state-full {
+  .when-full {
+    display: block;
+  }
+
+  .when-empty {
+    display: none;
+  }
+}
+
+@media (min-width: 770px) {
+  #search-form {
+    // adapted from https://jsbin.com/wejomuf/edit?html,css,output
+    position: sticky;
+    vertical-align: top;
+    max-height: 90vh;
+    overflow-y: auto;
+    top: 3.25rem;
+    bottom: 0;
+    border-right: 0.1rem solid #ccc;
+  }
+}
+
+#books {
+  width: 15rem;
+
+  option {
+    &.required {
+      color: #fff;
+      background-color: #48c774;
+    }
+  }
+}
+
+#symbols {
+  width: 15rem;
+
+  option {
+    &.find-any {
+      color: #fff;
+      background-color: #48c774;
+    }
+
+    &.find-all {
+      color: #fff;
+      background-color: #00d1b2;
+    }
+
+    &.find-none {
+      color: #fff;
+      background: #f14668;
+    }
+  }
+}
+
+#results {
+  column-width: 9rem;
+}
+
+@media print {
+  body {
+    margin: 3em;
+  }
+
+  nav,
+  #search-form,
+  footer,
+  .noprint {
+    display: none;
+  }
+}

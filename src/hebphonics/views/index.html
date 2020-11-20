@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HebPhonics</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@creativebulma/bulma-tooltip@1/dist/bulma-tooltip.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tagify/3.21.0/tagify.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@yaireo/dragsort@1.0.8/dist/dragsort.min.css"
+    />
+
+    <script
+      defer
+      src="https://use.fontawesome.com/releases/v5.15.1/js/all.js"
+    ></script>
+
+    <link
+      rel="stylesheet/less"
+      href="{{url_for('static', filename='app.less')}}"
+    />
+    <script src="//cdn.jsdelivr.net/npm/less"></script>
+  </head>
+  <body class="has-navbar-fixed-top">
+    <nav
+      class="navbar is-link is-fixed-top"
+      role="navigation"
+      aria-label="main navigation"
+    >
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://hebphonics.com">
+          <strong>HebPhonics</strong>
+        </a>
+
+        <a
+          role="button"
+          class="navbar-burger"
+          aria-label="menu"
+          aria-expanded="false"
+        >
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a
+            class="navbar-item"
+            href="https://www.sbl-site.org/educational/BiblicalFonts_SBLHebrew.aspx"
+            >Hebrew Font</a
+          >
+          <a class="navbar-item" href="https://github.com/metaist/hebphonics"
+            >GitHub</a
+          >
+
+          <!-- <div class="navbar-item">
+            <a class="button is-link is-inverted is-small" href="{{url_for("login")}}">Login</a>
+          </div> -->
+        </div>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="columns">
+        <!-- Left -->
+        <div id="search-form" class="column is-4-desktop is-3-fullhd">
+          <!-- Syllables -->
+          <div class="field has-text-centered">
+            <label class="label">How many syllables?</label>
+            <div
+              id="syllen"
+              class="field is-grouped is-grouped-centered is-grouped-multiline"
+            >
+              {% for n in range(1, 8): %}
+              <p class="control">
+                <label class="checkbox">
+                  <input name="syllen" type="checkbox" value="{{n}}" /> {{n}}
+                </label>
+              </p>
+              {% endfor %}
+            </div>
+            <div class="buttons has-addons is-centered">
+              <button class="check-all button is-small">All</button>
+              <button class="check-none button is-small">None</button>
+            </div>
+          </div>
+
+          <!-- Sources -->
+          <div class="field has-text-centered">
+            <label class="label">Which sources?</label>
+            <div class="control">
+              <select class="select is-multiple" id="books" multiple size="5">
+                {% for b in books: %}
+                <option value="{{b}}">{{b}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="buttons has-addons is-centered">
+              <button
+                class="btn-select button is-small has-tooltip-bottom"
+                data-tooltip="Reset the selected book."
+                data-target="#books"
+                data-remove="required,excluded"
+                data-add=""
+              >
+                Don't Care
+              </button>
+              <button
+                class="btn-select button is-small is-success has-tooltip-bottom"
+                data-tooltip="Only get words from the selected books."
+                data-target="#books"
+                data-remove="excluded"
+                data-add="required"
+              >
+                Only These
+              </button>
+            </div>
+          </div>
+
+          <!-- Symbols -->
+          <div class="field has-text-centered">
+            <label for="symbols" class="label">Which symbols?</label>
+            <div class="control">
+              <select
+                class="select is-multiple"
+                id="symbols"
+                multiple
+                size="10"
+              >
+                {% for s in symbols: %}
+                <option value="{{s}}">{{s}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="buttons has-addons is-centered">
+              <button
+                class="btn-select button is-small"
+                data-tooltip="May or may not appear."
+                data-target="#symbols"
+                data-remove="find-any,find-all,find-none"
+                data-add=""
+              >
+                Don't Care
+              </button>
+
+              <button
+                class="btn-select button is-small is-success"
+                data-tooltip="AT LEAST ONE in every word"
+                data-target="#symbols"
+                data-remove="find-all,find-none"
+                data-add="find-any"
+              >
+                Choose
+              </button>
+
+              <button
+                class="btn-select button is-small is-primary"
+                data-tooltip="ALL of these in every word."
+                data-target="#symbols"
+                data-remove="find-any,find-none"
+                data-add="find-all"
+              >
+                Require
+              </button>
+
+              <button
+                class="btn-select button is-small is-danger"
+                data-tooltip="NONE of these."
+                data-target="#symbols"
+                data-remove="find-any,find-all"
+                data-add="find-none"
+              >
+                Exclude
+              </button>
+            </div>
+          </div>
+
+          <!-- Relative Sequence -->
+          <div class="field">
+            <label for="find_seq" class="label">Relative Sequence</label>
+            <p class="help">Possibly helpful for a shoresh search.</p>
+            <div class="control">
+              <textarea id="find_seq" class="textarea" rows="2"></textarea>
+            </div>
+          </div>
+
+          <!-- Exact Sequence -->
+          <div class="field">
+            <label for="find_seq" class="label">Exact Sequence</label>
+            <p class="help">
+              Symbol order is
+              <code>letter</code>, <code>dagesh</code>, <code>vowel</code>
+            </p>
+            <div class="control">
+              <textarea id="find_pat" class="textarea" rows="2"></textarea>
+            </div>
+          </div>
+
+          <!-- Result Order -->
+          <div class="field">
+            <!-- <label class="label">How should results be ordered?</label> -->
+            <div
+              id="order"
+              class="field is-grouped is-grouped-centered is-grouped-multiline"
+            >
+              <p class="control">
+                <label class="radio">
+                  <input name="order" type="radio" value="alpha" checked />
+                  Alphabetical
+                </label>
+              </p>
+              <p class="control">
+                <label class="radio">
+                  <input name="order" type="radio" value="random" /> Random
+                </label>
+              </p>
+            </div>
+          </div>
+
+          <!-- Search -->
+          <div class="buttons has-addons is-centered is-medium">
+            <button id="search" class="button is-link is-expanded">
+              Search
+            </button>
+            <button id="reset" class="button is-danger">Reset</button>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div id="content" class="column state-empty">
+          <div class="when-empty has-text-centered is-size-5 is-unselectable">
+            <span class="icon is-large has-text-info">
+              <i class="fas fa-2x fa-search"></i>
+            </span>
+            <p class="msg">Search for words &amp; results will appear here.</p>
+          </div>
+          <div id="results" class="when-full" dir="rtl">Results</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer has-text-centered">
+      <small>
+        <strong>HebPhonics</strong> by Shoshana Zazula<br />
+        Built by <a href="metaist.com">Metaist LLC</a> &bull; MIT License<br />
+        <a href="http://www.sbl-site.org/Fonts/SBL_Hbrw.ttf">SBL Hebrew Font</a>
+        by Tiro Typeworks<br />
+        <code>{{version}}</code>
+      </small>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tagify/3.21.0/tagify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/dragsort@1.0.8/dist/dragsort.min.js"></script>
+    <script>
+      var $one = (sel, $dom = document) => $dom.querySelector(sel);
+      var $all = (sel, $dom = document) => [...$dom.querySelectorAll(sel)];
+      var $on = ($dom, evt, fn) => $dom.addEventListener(evt, fn, false);
+
+      var getChecked = ($list) =>
+        $list.map(($d) => ($d.checked ? $d.value : null)).filter((v) => v);
+
+      var getJSON = (url) => fetch(url).then((response) => response.json());
+      var postJSON = (url, args = null) => {
+        return fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: args ? JSON.stringify(args) : "",
+        }).then((response) => response.json());
+      };
+
+      var app = {
+        /** Bind events. */
+        init: () => {
+          app.init_checkboxes();
+          app.init_selectboxes();
+          app.init_tags();
+          $on($one("#search"), "click", app.search);
+          $on($one("#reset"), "click", app.reset);
+        },
+
+        init_checkboxes: () => {
+          $all(".check-all").forEach((btn) =>
+            $on(btn, "click", (e) => {
+              app.check_all(e.target.parentElement.parentElement, true);
+            })
+          );
+
+          $all(".check-none").forEach((btn) =>
+            $on(btn, "click", (e) => {
+              app.check_all(e.target.parentElement.parentElement, false);
+            })
+          );
+        },
+
+        init_selectboxes: () => {
+          $all(".btn-select").forEach((btn) =>
+            $on(btn, "click", (e) => {
+              var data = e.target.dataset;
+              var remove = data.remove ? data.remove.split(",") : [];
+              var add = data.add ? data.add.split(",") : [];
+              app.select_symbol(`${data.target} :checked`, remove, add);
+            })
+          );
+        },
+
+        init_tags: () => {
+          var niqqud = $all("#symbols option").map((o) => o.value);
+          var options = {
+            whitelist: niqqud,
+            enforceWhitelist: true,
+            duplicates: true,
+            skipInvalid: true,
+            originalInputValueFormat: (valuesArr) =>
+              valuesArr.map((item) => item.value).join(","),
+            autoComplete: { rightKey: true },
+            dropdown: {
+              enabled: 1,
+              position: "text",
+            },
+          };
+
+          var $seq = $one("#find_seq");
+          var seq = new Tagify($seq, options);
+          app.tag_seq = seq;
+          seq.DOM.scope.setAttribute("rows", $seq.getAttribute("rows"));
+          var dragsort = new DragSort(seq.DOM.scope, {
+            selector: "." + seq.settings.classNames.tag,
+            callbacks: {
+              dragEnd: (elm) => seq.updateValueByDOMTags(),
+            },
+          });
+
+          var $pat = $one("#find_pat");
+          var pat = new Tagify($pat, options);
+          app.tag_pat = pat;
+          pat.DOM.scope.setAttribute("rows", $pat.getAttribute("rows"));
+          var dragsort = new DragSort(pat.DOM.scope, {
+            selector: "." + pat.settings.classNames.tag,
+            callbacks: {
+              dragEnd: (elm) => pat.updateValueByDOMTags(),
+            },
+          });
+        },
+
+        check_all: ($dom, state = true) => {
+          $all('[type="checkbox"]', $dom).forEach(
+            (chk) => (chk.checked = state)
+          );
+        },
+
+        /** Remove and then add classes to selected symbols. */
+        select_symbol: (sel, remove, add) => {
+          $all(sel).forEach((o) => {
+            remove.forEach((c) => o.classList.remove(c));
+            add.forEach((c) => o.classList.add(c));
+            o.selected = false;
+          });
+        },
+
+        reset: () => {
+          app.check_all($one("#syllen"), false);
+          app.select_symbol("#books option", ["required", "excluded"], []);
+          app.select_symbol(
+            "#symbols option",
+            ["find-any", "find-all", "find-none"],
+            []
+          );
+          app.tag_seq.removeAllTags();
+          app.tag_pat.removeAllTags();
+        },
+
+        from_hash: (args) => {},
+
+        from_json: (args) => {},
+
+        to_json: () => {
+          var syllen = $all("#syllen :checked").map((o) =>
+            parseInt(o.value, 10)
+          );
+          var books_all = $all("#books .required").map((o) => o.value);
+          var find_any = $all("#symbols .find-any").map((o) => o.value);
+          var find_all = $all("#symbols .find-all").map((o) => o.value);
+          var find_none = $all("#symbols .find-none").map((o) => o.value);
+          var find_seq = $one("#find_seq").value;
+          var find_pat = $one("#find_pat").value;
+          var order = getChecked($all("#order input"))[0];
+
+          var args = {
+            ...(syllen.length && { syllen: syllen }),
+            ...(books_all.length && { books_all: books_all }),
+            ...(find_any.length && { find_any: find_any }),
+            ...(find_all.length && { find_all: find_all }),
+            ...(find_none.length && { find_none: find_none }),
+            ...(find_seq.length && { find_seq: find_seq.split(",") }),
+            ...(find_pat.length && { find_pat: find_pat.split(",") }),
+            order: order,
+          };
+
+          return args;
+        },
+
+        /** Search the database. */
+        search: () => {
+          var args = app.to_json();
+          console.log(args);
+          postJSON("/words", args).then((data) => {
+            console.log(data.query);
+
+            var $results = $one("#results");
+            var $container = $results.parentElement;
+
+            var words = data.data;
+            if (!words.length) {
+              $one(".msg", $container).innerHTML = "No words found.";
+              $container.classList.remove("state-full");
+              $container.classList.add("state-empty");
+              return;
+            }
+
+            var p = '<p title="${w.s}" >';
+            words = words.map(
+              (w) => `
+              <div title="${w.s}" dir="LTR">
+                <div class="hebrew" dir="RTL" lang="HE">${w.h}</div>
+              </div>
+            `
+            );
+            $results.innerHTML = words.join("");
+            $container.classList.remove("state-empty");
+            $container.classList.add("state-full");
+          });
+        },
+      };
+
+      app.init();
+    </script>
+  </body>
+</html>

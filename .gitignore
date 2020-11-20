@@ -1,3 +1,36 @@
-*~
-*.pyc
+text/
+.env
+config/
+
+# general
+_ignore*
+_seed.py
+.venv
+*.db
+
+# editors
+.idea
+.vim
+.vscode
+
+# config
+.blackbox/pubring.gpg~
+.blackbox/pubring.kbx~
+.blackbox/secring.gpg
+/config/dev/config-dev.txt
+/config/prod/config-prod.txt
+/config/stage/config-stage.txt
+
+# run
+.ipynb_checkpoints
+__pycache__
+
+# test
 .coverage
+.pytest_cache
+/htmlcov
+
+# build
+*.egg-info
+/build
+/dist
