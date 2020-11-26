@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # coding: utf-8
 """Controllers for HebPhonics."""
+# native
+import math
 
 # lib
 from flask import jsonify, render_template, request
 from sqlalchemy.sql import and_, or_
-from sqlalchemy.sql.expression import func
+from sqlalchemy.sql.expression import desc, false, func
 
 # pkg
-from .. import app, tokens, __version__, __pubdate__
+from .. import app, tokens, rules, __version__, __pubdate__
 from ..models import Book, Word, Occurrence
 from .jsend import JSend
-
-SYMBOLS = list(tokens.GRAMMAR_NAMES)
 
 
 @app.route("/")
@@ -25,7 +25,8 @@ def index():
     return render_template(
         "index.html",
         books=[b.name for b in Book.query.order_by(Book.id).all()],
-        symbols=SYMBOLS,
+        symbols=list(tokens.SYMBOLS),
+        rules=rules.RULES,
         version=version,
     )
 
@@ -35,7 +36,17 @@ def list_word():
     """Search database."""
     args = request.json
     query = search(**args)
-    words = [{"h": w.hebrew, "s": w.syllables, "r": w.rules} for w in query.all()]
+    words = [
+        {
+            "h": w.hebrew,
+            "s": w.syllables,
+            "r": w.rules,
+            "f": w.freq,
+            "l": round(math.log(w.freq)),
+            "e": w.ref,
+        }
+        for w in query.all()
+    ]
     sql = str(query.statement.compile(compile_kwargs={"literal_binds": True}))
     return jsonify(JSend(data=words, query=sql))
 
@@ -74,16 +85,16 @@ def search(limit=1000, shemot=False, **kwargs):
     Returns:
         list<Word>. Words that match the criteria.
     """
-    # pylint: disable=too-many-locals, too-many-branches
-    query = Word.query
+    # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    query = Word.query.join(Occurrence)
 
-    # Search
     if not shemot:
-        query = query.filter_by(shemot=False)
+        query = query.filter(Word.shemot == false())
 
+    # Books
     books_all = _list("books_all", kwargs)
     if books_all:
-        query = query.join(Occurrence, Book).filter(Book.name.in_(books_all))
+        query = query.join(Book).filter(Book.name.in_(books_all))
 
     # Symbols
     find_any = _list("find_any", kwargs)
@@ -114,10 +125,27 @@ def search(limit=1000, shemot=False, **kwargs):
         condition = ", ".join(quoted)
         query = query.filter(Word.parsed.like(f"%{condition}%"))
 
+    # Rules
+    rule_any = _list("rule_any", kwargs)
+    rule_all = _list("rule_all", kwargs)
+    rule_none = _list("rule_none", kwargs)
+
+    if rule_any:
+        condition = [Word.rules.like(f"%'{rule}'%") for rule in rule_any]
+        query = query.filter(or_(*condition))
+
+    if rule_all:
+        condition = [Word.rules.like(f"%'{rule}'%") for rule in rule_all]
+        query = query.filter(and_(*condition))
+
+    if rule_none:
+        condition = [~Word.rules.like(f"%'{rule}'%") for rule in rule_none]
+        query = query.filter(and_(*condition))
+
     # Filters
     gematria = _list("gematria", kwargs)
     syllen = _list("syllen", kwargs)
-    syllen_hatafs = _list("syllen_hatafs", kwargs)
+    freq = _list("freq", kwargs)
 
     if gematria:
         query = query.filter(Word.gematria.in_(gematria))
@@ -125,15 +153,23 @@ def search(limit=1000, shemot=False, **kwargs):
     if syllen:
         query = query.filter(Word.syllen.in_(syllen))
 
-    if syllen_hatafs:
-        query = query.filter(Word.syllen_hatafs.in_(syllen_hatafs))
+    freq_col = func.sum(Occurrence.freq).label("freq")
+    if freq:
+        condition = [freq_col.between(5 ** n, 5 ** (n + 1)) for n in freq]
+        query = query.having(or_(*condition))
 
     # Order
     order = kwargs.get("order", "alpha")
     if order == "random":
         query = query.order_by(func.random())
+    elif order == "freq":
+        query = query.order_by(desc("freq"))
     else:
         query = query.order_by(Word.hebrew)
+
+    query = query.add_columns(
+        Word.id, Word.hebrew, Word.syllables, Word.rules, freq_col, Occurrence.ref
+    ).group_by(Word.hebrew)
 
     # Limits
     if limit:

@@ -41,7 +41,7 @@ from tqdm import tqdm
 
 
 # pkg
-from . import grammar, tokens
+from . import grammar, tokens as T
 from .models import db_create, db, Book, Word, Occurrence
 from .server import app
 
@@ -91,21 +91,22 @@ def save_words(lock, pos, write_q):
         desc = f"{os.getpid()} SAVE  {book_name:<15}"
         for clean, stats in tqdm(msg.data["words"].items(), desc=desc, position=pos):
             word_id = seen.get(clean, len(seen) + 1)
+            raw = stats["raw"]
             if clean not in seen:
                 seen[clean] = word_id
-                parser = grammar.Parser(stats["raw"])
-                parsed = parser.parse()
-                syllables = parser.syllabify()
+                parser = grammar.Parser()
+                parsed = parser.parse(raw)
+                syllables = parser.syllabify(parsed)
                 words.append(
                     dict(
                         id=word_id,
                         hebrew=clean,
                         shemot=grammar.isshemot(clean),
                         gematria=grammar.gematria(clean),
-                        parsed=str(parsed),
+                        parsed=str(parsed.flat()),
                         syllables=str(syllables),
                         syllen=len(syllables),
-                        rules=str(parser.rules),
+                        rules=str(parsed.rules.flat()),
                     )
                 )
 
@@ -143,7 +144,7 @@ def count_words(lock, pos, read_q, write_q):
             for word in tqdm(book.find_all("w"), desc=desc, position=pos):
                 # NOTE: We ignore nested <x> and keep nested <s>!
                 raw = get_word(word)
-                clean = tokens.strip(raw)
+                clean = T.strip(raw)
                 if clean in stats:
                     stats[clean]["freq"] += 1
                 else:

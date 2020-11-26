@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -98,11 +98,32 @@
             </div>
           </div>
 
+          <!-- Frequency -->
+          <div class="field has-text-centered">
+            <label class="label">How common (lower = rare)?</label>
+            <div
+              id="freq"
+              class="field is-grouped is-grouped-centered is-grouped-multiline"
+            >
+              {% for n in range(0, 6): %}
+              <p class="control">
+                <label class="checkbox">
+                  <input name="freq" type="checkbox" value="{{n}}" /> {{n}}
+                </label>
+              </p>
+              {% endfor %}
+            </div>
+            <div class="buttons has-addons is-centered">
+              <button class="check-all button is-small">All</button>
+              <button class="check-none button is-small">None</button>
+            </div>
+          </div>
+
           <!-- Sources -->
           <div class="field has-text-centered">
             <label class="label">Which sources?</label>
             <div class="control">
-              <select class="select is-multiple" id="books" multiple size="5">
+              <select id="books" class="select is-multiple" multiple size="5">
                 {% for b in books: %}
                 <option value="{{b}}">{{b}}</option>
                 {% endfor %}
@@ -126,6 +147,59 @@
                 data-add="required"
               >
                 Only These
+              </button>
+            </div>
+          </div>
+
+          <!-- Rules -->
+          <div class="field has-text-centered">
+            <label for="rules" class="label">Which rules?</label>
+            <div class="control">
+              <select class="select is-multiple" id="rules" multiple size="5">
+                {% for s in rules|sort: %}
+                <option value="{{s}}">{{s}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="buttons has-addons is-centered">
+              <button
+                class="btn-select button is-small"
+                data-tooltip="May or may not appear."
+                data-target="#rules"
+                data-remove="find-any,find-all,find-none"
+                data-add=""
+              >
+                Don't Care
+              </button>
+
+              <button
+                class="btn-select button is-small is-success"
+                data-tooltip="AT LEAST ONE in every word"
+                data-target="#rules"
+                data-remove="find-all,find-none"
+                data-add="find-any"
+              >
+                Choose
+              </button>
+
+              <button
+                class="btn-select button is-small is-primary"
+                data-tooltip="ALL of these in every word."
+                data-target="#rules"
+                data-remove="find-any,find-none"
+                data-add="find-all"
+              >
+                Require
+              </button>
+
+              <button
+                class="btn-select button is-small is-danger"
+                data-tooltip="NONE of these."
+                data-target="#rules"
+                data-remove="find-any,find-all"
+                data-add="find-none"
+              >
+                Exclude
               </button>
             </div>
           </div>
@@ -227,6 +301,11 @@
                   <input name="order" type="radio" value="random" /> Random
                 </label>
               </p>
+              <p class="control">
+                <label class="radio">
+                  <input name="order" type="radio" value="freq" /> Frequncy
+                </label>
+              </p>
             </div>
           </div>
 
@@ -251,6 +330,14 @@
         </div>
       </div>
     </section>
+
+    <aside id="details">
+      <div class="message">
+        <div class="message-body">
+          <em>Click a result to view details.</em>
+        </div>
+      </div>
+    </aside>
 
     <footer class="footer has-text-centered">
       <small>
@@ -289,6 +376,7 @@
           app.init_tags();
           $on($one("#search"), "click", app.search);
           $on($one("#reset"), "click", app.reset);
+          $on($one("#results"), "click", app.details);
         },
 
         init_checkboxes: () => {
@@ -372,7 +460,13 @@
 
         reset: () => {
           app.check_all($one("#syllen"), false);
+          app.check_all($one("#freq"), false);
           app.select_symbol("#books option", ["required", "excluded"], []);
+          app.select_symbol(
+            "#rules option",
+            ["find-any", "find-all", "find-none"],
+            []
+          );
           app.select_symbol(
             "#symbols option",
             ["find-any", "find-all", "find-none"],
@@ -390,17 +484,30 @@
           var syllen = $all("#syllen :checked").map((o) =>
             parseInt(o.value, 10)
           );
+          var freq = $all("#freq :checked").map((o) => parseInt(o.value, 10));
           var books_all = $all("#books .required").map((o) => o.value);
+
+          var rule_any = $all("#rules .find-any").map((o) => o.value);
+          var rule_all = $all("#rules .find-all").map((o) => o.value);
+          var rule_none = $all("#rules .find-none").map((o) => o.value);
+
           var find_any = $all("#symbols .find-any").map((o) => o.value);
           var find_all = $all("#symbols .find-all").map((o) => o.value);
           var find_none = $all("#symbols .find-none").map((o) => o.value);
           var find_seq = $one("#find_seq").value;
           var find_pat = $one("#find_pat").value;
+
           var order = getChecked($all("#order input"))[0];
 
           var args = {
             ...(syllen.length && { syllen: syllen }),
+            ...(freq.length && { freq: freq }),
             ...(books_all.length && { books_all: books_all }),
+
+            ...(rule_any.length && { rule_any: rule_any }),
+            ...(rule_all.length && { rule_all: rule_all }),
+            ...(rule_none.length && { rule_none: rule_none }),
+
             ...(find_any.length && { find_any: find_any }),
             ...(find_all.length && { find_all: find_all }),
             ...(find_none.length && { find_none: find_none }),
@@ -433,15 +540,37 @@
             var p = '<p title="${w.s}" >';
             words = words.map(
               (w) => `
-              <div title="${w.s}" dir="LTR">
-                <div class="hebrew" dir="RTL" lang="HE">${w.h}</div>
-              </div>
+              <div class="hebrew" dir="rtl" lang="he"
+                data-frequency="${w.f}"
+                data-syllables="${w.s}"
+                data-rules="${w.r}"
+                data-ref="${w.e}">${w.h}</div>
             `
             );
             $results.innerHTML = words.join("");
             $container.classList.remove("state-empty");
             $container.classList.add("state-full");
           });
+        },
+
+        details: (e) => {
+          if (!e.target || !e.target.classList.contains("hebrew")) return;
+
+          var data = e.target.dataset;
+          var $container = $one("#details .message-body");
+          var link = `<a href="https://www.sefaria.org/${data["ref"]
+            .replace(/[ :]/g, ".")
+            .replace("^1\.", "I_")
+            .replace("^2\.", "II_")}?lang=bi" target="_blank">${
+            data["ref"]
+          }</a>`;
+
+          $container.innerHTML = `
+            <p><big>${e.target.innerText}</big> ${link}</p>
+            <p><strong>Frequency</strong>${data["frequency"]}</p>
+            <p><strong>Syllables</strong> <code>${data["syllables"]}</code></p>
+            <p><strong>Rules</strong> <code>${data["rules"]}</code></p>
+          `;
         },
       };
 

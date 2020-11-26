@@ -7,74 +7,21 @@ This module provides basic functions for classifying Hebrew characters
 
 NOTE
     This is a "best-effort" parser and while attempts are made at correctness,
-    some characters may be underspecified or incorrectly specified
+    some characters may be under-specified or incorrectly specified
     (e.g., "qamats" rather than "qamats-qatan").
 """
 
 # native
 from dataclasses import dataclass, field
-from typing import List
+from inspect import Parameter, signature
+import operator
+from typing import Any, Callable, Iterable, List, Iterator, Union
 import re
 
 # pkg
 from . import tokens as T
+from .rules import STAGES, isvowel, niqqudtype, NIQQUD_HATAF
 
-BEGEDKEFET = {
-    # {<unicode name>: (<name WITHOUT dagesh>, <name WITH dagesh>)
-    T.LETTER_BET: (T.NAME_VET, T.NAME_BET),
-    T.LETTER_GIMEL: (T.NAME_GIMEL, T.NAME_GIMEL),
-    T.LETTER_DALET: (T.NAME_DALET, T.NAME_DALET),
-    T.LETTER_KAF: (T.NAME_KHAF, T.NAME_KAF),
-    T.LETTER_FINAL_KAF: (T.NAME_KHAF_SOFIT, T.NAME_KAF_SOFIT),
-    T.LETTER_PE: (T.NAME_FE, T.NAME_PE),
-    T.LETTER_FINAL_PE: (T.NAME_FE_SOFIT, T.NAME_PE_SOFIT),
-    T.LETTER_TAV: (T.NAME_SAV, T.NAME_TAV),
-}
-"""BeGeDKeFeT letters have altered names when followed by a dagesh."""
-
-ALEF_HE = [T.NAME_ALEF, T.NAME_HE]
-ALEF_HE_YOD = [T.NAME_ALEF, T.NAME_HE, T.NAME_YOD]
-
-## Niqqud
-NIQQUD_DAGESH = "dagesh"
-NIQQUD_SHEVA = "sheva"
-NIQQUD_HATAF = "hataf"
-NIQQUD_LONG = "long"
-NIQQUD_SHORT = "short"
-NIQQUD_TYPES = {
-    T.NAME_DAGESH: NIQQUD_DAGESH,
-    T.NAME_DAGESH_HAZAQ: NIQQUD_DAGESH,
-    T.NAME_DAGESH_QAL: NIQQUD_DAGESH,
-    #
-    T.NAME_SHEVA: NIQQUD_SHEVA,
-    T.NAME_SHEVA_NA: NIQQUD_SHEVA,
-    T.NAME_SHEVA_NAH: NIQQUD_SHEVA,
-    #
-    T.NAME_HATAF_SEGOL: NIQQUD_HATAF,
-    T.NAME_HATAF_PATAH: NIQQUD_HATAF,
-    T.NAME_HATAF_QAMATS: NIQQUD_HATAF,
-    #
-    T.NAME_HIRIQ: NIQQUD_SHORT,
-    T.NAME_HIRIQ_MALE: NIQQUD_LONG,
-    T.NAME_TSERE: NIQQUD_LONG,
-    T.NAME_TSERE_MALE: NIQQUD_LONG,
-    T.NAME_SEGOL: NIQQUD_SHORT,
-    T.NAME_SEGOL_MALE: NIQQUD_SHORT,
-    T.NAME_PATAH: NIQQUD_SHORT,
-    T.NAME_PATAH_MALE: NIQQUD_SHORT,
-    T.NAME_PATAH_GENUVAH: NIQQUD_SHORT,
-    T.NAME_QAMATS: NIQQUD_LONG,
-    T.NAME_QAMATS_MALE: NIQQUD_LONG,
-    T.NAME_QAMATS_QATAN: NIQQUD_SHORT,
-    T.NAME_HOLAM_MALE: NIQQUD_LONG,
-    T.NAME_HOLAM_HASER: NIQQUD_LONG,
-    T.NAME_QUBUTS: NIQQUD_SHORT,
-    T.NAME_SHURUQ: NIQQUD_LONG,
-}
-"""Categories of niqqud."""
-
-
-## Gematria
 GEMATRIA_VALUES = {
     T.LETTER_ALEF: 1,
     T.LETTER_BET: 2,
@@ -106,7 +53,7 @@ GEMATRIA_VALUES = {
 }
 """Numerical values of the Hebrew unicode letters."""
 
-RE_SHEMOT = (
+RE_SHEMOT = re.compile(
     "("
     + ")|(".join(
         [
@@ -119,7 +66,8 @@ RE_SHEMOT = (
             r"^צְבָאוֹת$",  # Tzvakot
         ]
     )
-    + ")"
+    + ")",
+    re.I + re.U,
 )
 """Regex that matches the seven special names of G-d.
 
@@ -131,466 +79,362 @@ obligations and is often avoided.
 def gematria(uni: str) -> int:
     """Return the numerical value of a Hebrew string.
 
-    Args:
-        uni (unicode): unicode string
-
-    Returns:
-        int. numerical value of the string
-
-    Examples:
-    >>> gematria("שָׁלוֹם‎")
+    >>> gematria("שָׁלוֹם")
     376
     """
-    return sum([GEMATRIA_VALUES[letter] for letter in uni if letter in GEMATRIA_VALUES])
+    return sum([GEMATRIA_VALUES.get(letter, 0) for letter in uni])
 
 
 def isshemot(uni: str) -> bool:
     """Returns True if the given unicode string contains a name of G-d.
 
-    Args:
-        uni (unicode): word to check
-
-    Returns:
-        bool. True if the word is a name of G-d.
-
-    Examples:
     >>> isshemot("אֵל")
     True
     >>> isshemot("אֵלַי")
     False
     """
-    return re.search(RE_SHEMOT, uni, re.I + re.U) is not None
+    return RE_SHEMOT.search(uni) is not None
 
 
-def isvowel(point: str) -> str:
-    """Return True if the point name is a vowel.
+class ItemList(list):
+    """Like `list` except that properties come from the contents.
 
-    >>> isvowel(T.NAME_QAMATS)
+    >>> l = ItemList([Cluster(letter="A"), Token(letter="B")])
+    >>> l.letter == ["A", "B"]
+    True
+    >>> l.attr(["letter"]) == ["A", "B"]
+    True
+    >>> l.attr(["letter"], first=True) == "A"
     True
     """
-    return niqqudtype(point) in [NIQQUD_HATAF, NIQQUD_SHORT, NIQQUD_LONG]
 
+    def __getattr__(self, name) -> list:
+        """Return a list of the this attribute in the contained atoms."""
+        return self.attr(name, first=False)
 
-def niqqudtype(point: str) -> str:
-    """Return the type of point or None.
+    def attr(self, attrs, first=False) -> Union[Any, Iterable[Any]]:
+        """Return the attribute value of the contained atoms.
 
-    Args:
-        point (str): the grammatical name of the point
+        Args:
+            attrs (list[str]): attributes to extract
+            first (bool): get first value or None if there are none (default: False)
 
-    Returns:
-        str or None. The type of point ('hataf', 'short', 'long', 'sheva', or
-        'dagesh') or None if the name is not a name of a point.
+        Returns:
+            (Any or list[Any]): the values of the attribute
+        """
+        if isinstance(attrs, str):
+            attrs = [attrs]
 
-    Examples:
-    >>> niqqudtype('hataf-segol') == NIQQUD_HATAF
-    True
-    >>> niqqudtype('qubuts') == NIQQUD_SHORT
-    True
-    >>> niqqudtype('sheva-nah') == NIQQUD_SHEVA
-    True
-    >>> niqqudtype('dagesh-hazaq') == NIQQUD_DAGESH
-    True
-    >>> niqqudtype('alef') is None
-    True
-    >>> niqqudtype(None) is None
-    True
-    """
-    return NIQQUD_TYPES.get(T.hebname(point))
+        key = operator.attrgetter(*attrs)
+        if first:  # short-circuit
+            return key(self[0]) if self else None
+
+        result = ItemList([key(item) for item in self])
+        return result
+
+    def flat(self) -> "ItemList":
+        """Return a flattened version of this object."""
+        return ItemList(T.flatten(self))
 
 
 @dataclass
-class Cluster:
-    """Hebrew symbol cluster; a letter, dagesh, vowel, and points.
+class BaseToken:
+    """Base class for tokens and clusters."""
 
-    Clusters are used both for lexing and for parsing. During lexing, the values
-    are Unicode code points. During parsing, the values are the grammatical names
-    of the symbols.
+    letter: str = ""
+    dagesh: str = ""
+    vowel: str = ""
+
+    @property
+    def items(self) -> list:
+        """Return the contents as a list."""
+        return [item for item in [self.letter, self.dagesh, self.vowel] if item]
+
+    def __bool__(self) -> bool:
+        """Return True if any component is non-empty."""
+        return bool(self.items)
+
+    def __iter__(self) -> Iterator[str]:
+        """Return an iterator over the items."""
+        return iter(self.items)
+
+    def __len__(self) -> int:
+        """Return length of items."""
+        return len(self.items)
+
+    def has(self, **kwargs):
+        """Return True if the token has the attributes listed."""
+        result = True
+        for prop, want in kwargs.items():
+            have = getattr(self, prop, "")
+            if not want or isinstance(want, bool):
+                result = result and bool(have) == bool(want)
+            elif isinstance(want, (tuple, list, dict)):
+                result = result and have in want
+            else:
+                result = result and have == want
+            if not result:
+                break
+        return result
+
+    def isbare(self, letters) -> bool:
+        """Return True if the token lacks a dagesh or vowel.
+
+        >>> BaseToken(letter="A").isbare("A")
+        True
+        """
+        return self.has(dagesh="", vowel="", letter=letters)
+
+
+@dataclass
+class Token(BaseToken):
+    """Unicode code points grouped by role.
+
+    >>> t = Token(letter="A", dagesh="B", points=["C", "D"])
+    >>> list(t) == ["A", "B", "C", "D"]
+    True
+    >>> str(t) == "ABCD"
+    True
     """
 
-    letter: str = None
-    dagesh: str = None
-    vowel: str = None
     points: List[str] = field(default_factory=list)
+    accents: List[str] = field(default_factory=list)
+    puncta: List[str] = field(default_factory=list)
+
+    @property
+    def items(self) -> list:
+        """Return the contents as a list."""
+        return (
+            ([self.letter] if self.letter else [])
+            + ([self.dagesh] if self.dagesh else [])
+            + ([self.vowel] if self.vowel else [])
+            + self.points
+            + self.accents
+            + self.puncta
+        )
+
+    def __str__(self) -> str:
+        """Return a string representation."""
+        return "".join(self.items)
+
+    def isbare(self, letters=None) -> bool:
+        """Return True if the cluster lacks a dagesh or points.
+
+        >>> Token().isbare()
+        True
+        >>> Token(letter="A").isbare("A")
+        True
+        """
+        result = not self.dagesh and not self.points
+        if letters:
+            result = result and self.letter in letters
+        return result
+
+
+@dataclass
+class Cluster(BaseToken):
+    """Grammatical cluster of a letter, dagesh, and vowel."""
+
+    isopen: bool = False
+    rules: List[str] = field(default_factory=ItemList)
 
     def reset(self) -> "Cluster":
         """Reset the values of all the properties."""
-        self.letter = None
-        self.dagesh = None
-        self.vowel = None
-        self.points = []
+        self.letter = ""
+        self.dagesh = ""
+        self.vowel = ""
+        self.isopen = False
+        self.rules = ItemList()
         return self
 
-    def __bool__(self) -> bool:
-        """Return True if any part of the cluster is set.
-
-        >>> bool(Cluster())
-        False
-        """
-        return bool(self.letter or self.dagesh or self.vowel or self.points)
-
-    def __len__(self) -> int:
-        """Return number of items.
-
-        >>> len(Cluster(letter='A', dagesh='B'))
-        2
-        """
-        return len(self.tolist())
-
-    def tolist(self) -> List[str]:
-        """Returns a list representation of the cluster.
-
-        >>> Cluster().tolist()
-        []
-        """
-        return [
-            item for item in [self.letter, self.dagesh, self.vowel] if item
-        ] + self.points
-
-    def append(self, point):
-        """Adds a point to this cluster.
-
-        >>> Cluster().append('Y').tolist()
-        ['Y']
-        """
-        self.points.append(point)
-        return self
-
-    def update(self, letter=None, dagesh=None, vowel=None, points=None):
-        """Sets the attributes of the cluster.
-
-        >>> Cluster().update(letter='W', dagesh='X', vowel='Y', points=['Z']).tolist()
-        ['W', 'X', 'Y', 'Z']
-        """
-        self.letter = letter or self.letter
-        self.dagesh = dagesh or self.dagesh
-        self.vowel = vowel or self.vowel
-        self.points = points or self.points
+    def update(self, **kwargs) -> "Cluster":
+        """Sets the attributes of the cluster."""
+        for item in ["letter", "dagesh", "vowel", "isopen"]:
+            setattr(self, item, kwargs.get(item, getattr(self, item)))
         return self
 
 
 class Parser:
     """Best-effort Hebrew language parser.
 
-    Parsing is accomplished in three stages: lexing, parsing, fine-tuning.
+    Stages:
+      - **Grouping**: Unicode symbols are are grouped together using the `Cluster`
+        class to separate out the `letter` from any `points`, `accents`, or other
+        `puncta`.
 
-    # Stage 1: Lexing
-    In this stage, Unicode symbols are grouped together. The `Cluster` class is
-    used to separate out the `letter` from any other `points` that might be nearby.
+      - **Initial Guess**: We use the Unicode symbol names to make an initial guess
+        of the `letter` and `vowel` names.
 
-    # Stage 2: Parsing
-    In this stage, we first approximate the grammatical symbol names from the
-    Unicode symbol name. Then we apply a series of rules that discriminate between
-    special cases. The flow is:
-        - the `letter` is parsed with `parse_letter`
-            - handle two letter-dependent `sheva` rules
-            - separate `shuruq`, `vav` + `dagesh-hazaq`
-            - separate `shin`, `sin`
-            - process `dagesh-`
-        - each of the `points` is parsed with `parse_vowel`
-            - handle `patah-genuvah`
-            - separate `holam-male`, `vav` + `holam-haser`
-            - handle `qamats-qatan`
-            - process `sheva-`
+      - **Letters & Dagesh**: We make final `letter` and `dagesh` determinations for
+        `vav`, `mapiq-`, and `BGDKFT` letters.
 
-    # Stage 3: Fine-tuning
-    While most parse rules only require the immediately preceding or current cluster
-    of tokens, a few rules need to consider the state after almost all the other rules
-    have been applied. For example, the final determination of `-male` vowels can
-    depend on [_mater lectionis_][1] which may depend on a `shuruq` determiniation.
-
-    [1]: https://en.wikipedia.org/wiki/Mater_lectionis
+      - **Vowels & Sheva**: We make final `vowel` determinations including
+        `qamats-`, `male-`, and `sheva-`.
     """
 
-    def __init__(self, uni: str):
-        """Construct a new parser around a particular word."""
-        self.uni = T.normalize(uni)
-        self.lexed = self.lex(self.uni)
-        self.parsed = []
-        self.rules = []
+    def __init__(self, enabled: List[str] = None, disabled: List[str] = None):
+        """Construct a new parser with certain rules enabled or disabled."""
+        self.enabled = enabled or []
+        self.disabled = disabled or []
+
+    def allow(self, name: str, cluster: Cluster = None) -> bool:
+        """Return True if the given rule is allowed."""
+        allow = True
+        if name in self.disabled:
+            allow = False
+        elif name in self.enabled:
+            allow = True
+        if allow and cluster:
+            cluster.rules.append(name)
+        return allow
 
     @staticmethod
-    def lex(uni: str) -> List[Cluster]:
-        """Return initial grouping of Unicode symbols."""
-        lexed = []
-        curr = Cluster()
+    def lex(uni: str) -> List[Token]:
+        """Return list of grouped Unicode tokens."""
+        lexed = ItemList()
+        token = Token()
         for symbol in uni:
             name = T.uniname(symbol, mode="const")
-            if name.startswith("LETTER_"):
-                if curr:  # add previous
-                    lexed.append(curr)
-                curr = Cluster(letter=symbol)
-            elif symbol == T.POINT_DAGESH_OR_MAPIQ:
-                curr.dagesh = T.NAME_DAGESH
-            elif name.startswith("POINT_"):
-                curr.append(symbol)
-        if curr:  # add last
-            lexed.append(curr)
+            category = name.split("_", 1)[0]
+
+            if category == "LETTER":
+                if token:  # add previous
+                    lexed.append(token)
+                token = Token(letter=symbol)
+            elif symbol in [T.POINT_SHIN_DOT, T.POINT_SIN_DOT]:
+                token.letter += symbol
+            elif T.POINT_DAGESH_OR_MAPIQ == symbol:
+                token.dagesh = symbol
+            elif symbol in T.VOWELS + T.HATAF_VOWELS:
+                token.vowel = symbol
+            elif category == "POINT":
+                token.points.append(symbol)
+            elif category == "ACCENT":
+                token.accents.append(symbol)
+            else:  # MARK, PUNCTUATION
+                token.puncta.append(symbol)
+
+        if token:  # add last
+            lexed.append(token)
         return lexed
 
-    def parse_dagesh(
-        self, token: Cluster, prev: Cluster, guess: Cluster, islast: bool = False
-    ):
-        """Apply `dagesh-` rules."""
+    @staticmethod
+    def guess(token: Token) -> Cluster:
+        """Return an initial guess from a token."""
+        dagesh = T.NAME_DAGESH if token.dagesh else ""
 
-        if T.LETTER_ALEF == token.letter and token.dagesh:
-            # H101: `dagesh` in `alef` is `mapiq-alef` (dagesh-mapiq-alef)
-            self.rules.append("H101")
-            guess.update(letter=T.NAME_MAPIQ_ALEF, dagesh=T.NAME_MAPIQ)
-        elif T.LETTER_HE == token.letter and token.dagesh:
-            if islast:
-                # H102: `dagesh` in last `he` is `mapiq-he` (dagesh-mapiq-he)
-                self.rules.append("H102")
-                guess.update(letter=T.NAME_MAPIQ_HE, dagesh=T.NAME_MAPIQ)
-            else:
-                # H103: `dagesh` in non-last `he` is `dagesh-hazaq` (dagesh-hazaq-he)
-                self.rules.append("H103")
-                guess.update(dagesh=T.NAME_DAGESH_HAZAQ)
-        elif token.letter in BEGEDKEFET:
-            name, changed = BEGEDKEFET[token.letter]
-            guess.letter = name
-            if token.dagesh and isvowel(prev.vowel):
-                # H104: `dagesh` in BGDKFT after vowel is `dagesh-hazaq` (dagesh-hazaq-bgdkft)
-                self.rules.append("H104")
-                guess.update(letter=changed, dagesh=T.NAME_DAGESH_HAZAQ)
-            elif token.dagesh:
-                # H105: `dagesh` in BGDKFT NOT after vowel is `dagesh-qal` (dagesh-qal-bgdkft)
-                # (including start of word)
-                self.rules.append("H105")
-                guess.update(letter=changed, dagesh=T.NAME_DAGESH_QAL)
+        letter = T.uniname(token.letter[0]).lower()
+        if letter.startswith("final_"):
+            letter = f"{letter[6:]}-sofit"
+        if T.LETTER_SHIN in token.letter:
+            letter = T.NAME_SHIN if T.POINT_SHIN_DOT in token.letter else T.NAME_SIN
 
-        if T.NAME_DAGESH == guess.dagesh:
-            # H106: any other `dagesh` is a `dagesh-hazaq` (dagesh-hazaq-other)
-            self.rules.append("H106")
-            guess.dagesh = T.NAME_DAGESH_HAZAQ
+        vowel = (T.uniname(token.vowel) or "").lower().replace("_", "-")
+        if T.POINT_HOLAM_HASER_FOR_VAV == token.vowel:
+            vowel = T.NAME_HOLAM_HASER
+        return Cluster(letter, dagesh, vowel, isopen=bool(vowel))
 
-    def parse_letter(self, token: Cluster, guess: Cluster, islast: bool = False):
-        """Update `guess` using letter-based rules.
+    def call(self, fn: Callable, *args, **kwargs):
+        """Invoke a rule."""
+        rule_name = getattr(fn, "rule")
+        if not self.allow(rule_name):
+            return False
 
-        NOTE: May also modify immediately preceding parsed value.
+        sig = signature(fn)
+        values = {}
+        for name, param in sig.parameters.items():
+            if param.kind == Parameter.VAR_KEYWORD:  # send all the values
+                values = kwargs
+                break
+            if name in kwargs:
+                values[name] = kwargs[name]
+        bound = sig.bind(*args, **values)
+        modified = fn(*bound.args, **bound.kwargs)
+        if modified:
+            modified.rules.append(rule_name)
+            return True
+        return False
 
-        Args:
-            token (Cluster): cluster of unparsed tokens
-            guess (Cluster): semi-parsed tokens
-            islast (bool): whether this is the last group of tokens
-        """
-        prev = self.parsed[-1] if self.parsed else Cluster()
-        isfirst = not prev
-        isbare = not token.dagesh and not token.points
+    def parse(self, uni: str) -> List[Cluster]:
+        """Return list of parsed cluster."""
+        parsed = ItemList()
+        tokens = self.lex(T.normalize(uni))
+        guesses = [self.guess(token) for token in tokens]
 
-        if (
-            prev.letter == guess.letter
-            and prev.vowel
-            and prev.vowel.startswith(T.NAME_SHEVA)
-        ):
-            # H207: `sheva` before same letter is `sheva-na` (sheva-na-double-letter)
-            self.rules.append("H207")
-            prev.vowel = T.NAME_SHEVA_NA
-        elif (
-            T.LETTER_ALEF == token.letter
-            and islast
-            and isbare
-            and prev.vowel
-            and prev.vowel.startswith(T.NAME_SHEVA)
-        ):
-            # H206: `sheva` before last bare `alef` is `sheva-nah` (sheva-nah-alef-end)
-            self.rules.append("H206")
-            prev.vowel = T.NAME_SHEVA_NAH
-        elif T.LETTER_VAV == token.letter and token.dagesh:
-            if isfirst or not isvowel(prev.vowel):
-                # H604: `VAV` with `DAGESH` NOT after vowel is `shuruq` (vav-is-shurug)
-                self.rules.append("H604")
-                guess.reset()  # reset guess
-                (prev or guess).vowel = T.NAME_SHURUQ
-            else:
-                # H605: `VAV` with `DAGESH` after/has vowel is `vav`, `dagesh-hazaq` (vav-dagesh-hazaq)
-                self.rules.append("H605")
-                guess.dagesh = T.NAME_DAGESH_HAZAQ
-        elif T.LETTER_SHIN == token.letter:
-            name = T.NAME_SIN  # to handle Yissacher
-            if T.POINT_SHIN_DOT in token.points:
-                name = T.NAME_SHIN
-            elif T.POINT_SIN_DOT in token.points:
-                name = T.NAME_SIN
-            guess.letter = name
+        def _apply_rules(stages, append=True):
+            last_idx = len(tokens) - 1
+            prev2, prev1 = Cluster(), Cluster()
+            for idx, token in enumerate(tokens):
+                guess = guesses[idx]
+                if not guess:  # it was reset
+                    continue
 
-        self.parse_dagesh(token, prev, guess, islast)
+                islast = idx == last_idx
+                context = dict(
+                    uni=uni,
+                    idx=idx,
+                    neg_idx=last_idx - idx,
+                    isfirst=idx == 0,
+                    islast=islast,
+                    prev=prev1,
+                    token=token,
+                    guess=guess,
+                    next_token=tokens[idx + 1] if not islast else Token(),
+                    next_guess=guesses[idx + 1] if not islast else Cluster(),
+                )
 
-    def parse_sheva(self, prev: Cluster, guess: Cluster, islast: bool = False):
-        """Apply `sheva-` rules."""
-        isfirst = not prev
-        prev_sheva = prev.vowel and prev.vowel.startswith(T.NAME_SHEVA)
-        last_vowel = prev.vowel
-        if not last_vowel and len(self.parsed) >= 2:
-            last_vowel = self.parsed[-2].vowel
+                for stage in stages:
+                    for fn in STAGES.get(stage, []):
+                        context["last_vowel"] = prev1.vowel or prev2.vowel
+                        if self.call(fn, **context):
+                            break
 
-        if isfirst:
-            # H201: `sheva` at word start is `sheva-na` (sheva-na-word-start)
-            self.rules.append("H201")
-            guess.vowel = T.NAME_SHEVA_NA
-        elif islast and prev_sheva:
-            # H209: two `sheva` at word end are `sheva-na`, `sheva-na` (sheva-double-end)
-            self.rules.append("H209")
-            prev.vowel = T.NAME_SHEVA_NA
-            guess.vowel = T.NAME_SHEVA_NA
-        elif islast:
-            # H202: `sheva` at the end of a word is `sheva-nah` (sheva-nah-word-end)
-            self.rules.append("H202")
-            guess.vowel = T.NAME_SHEVA_NAH
-        elif T.NAME_DAGESH_HAZAQ == guess.dagesh:
-            # H203: `sheva` under `dagesh-hazaq` is `sheva-na` (sheva-na-dagesh-hazaq)
-            self.rules.append("H203")
-            guess.vowel = T.NAME_SHEVA_NA
-        elif NIQQUD_LONG == niqqudtype(last_vowel):
-            # H204: `sheva` after long vowel is `sheva-na` (sheva-na-after-long-vowel)
-            self.rules.append("H204")
-            guess.vowel = T.NAME_SHEVA_NA
-        elif niqqudtype(last_vowel) in [NIQQUD_SHORT, NIQQUD_HATAF]:
-            # H205: `sheva` after short vowel is `sheva-nah` (sheva-nah-after-short-vowel)
-            self.rules.append("H205")
-            guess.vowel = T.NAME_SHEVA_NAH
-        elif prev_sheva:
-            # H208: two `sheva` midword are `sheva-nah`, `sheva-na` (sheva-double-midword)
-            self.rules.append("H207")
-            prev.vowel = T.NAME_SHEVA_NAH
-            guess.vowel = T.NAME_SHEVA_NA
+                prev2, prev1 = prev1, guess
+                if append:
+                    parsed.append(guess)
 
-    def parse_vowel(self, point: str, guess: Cluster, islast: bool = False):
-        """Update `guess` using the vowel information.
+        _apply_rules(["vav", "dagesh"])
+        _apply_rules(["male", "vowel", "sheva"], append=False)
+        _apply_rules(["last"], append=False)
+        return parsed
 
-        NOTE: May also modify immediately preceding parsed value.
-
-        Args:
-            point (str): vowel being processed
-            guess (Cluster): currently parsed item
-            islast (bool): whether this is the last token
-        """
-        prev = self.parsed[-1] if self.parsed else Cluster()
-
-        if T.POINT_PATAH == point and islast:
-            # H401: `patah` on last `het|ayin|mapiq-he` is `patah-genuvah` (patah-genuvah)
-            self.rules.append("H401")  # NOTE: we don't actually check the letter
-            guess.vowel = T.NAME_PATAH_GENUVAH
-        elif T.POINT_HOLAM_HASER_FOR_VAV == point:
-            # H601: `VAV` followed by `HOLAM_HASER_FOR_VAV` is `vav`, `holam-haser` (vav-holam-haser-unicode)
-            self.rules.append("H601")
-            guess.vowel = T.NAME_HOLAM_HASER
-        elif T.POINT_HOLAM == point:
-            guess.vowel = T.NAME_HOLAM_HASER
-            if T.NAME_VAV == guess.letter:
-                if not guess.dagesh and not prev.vowel:
-                    # H602: `vav`, `HOLAM_HASER` NOT after vowel or sheva is `holam-male` (vav-is-holam-male)
-                    self.rules.append("H602")
-                    guess.reset()
-                    (prev or guess).vowel = T.NAME_HOLAM_MALE
-                else:
-                    # H603: `VAV` with `HOLAM_HASER` after vowel or sheva `vav`, `holam-haser` (vav-holam-haser)
-                    self.rules.append("H603")
-                    guess.vowel = T.NAME_HOLAM_HASER
-        elif T.POINT_QAMATS == point and T.PUNCTUATION_MAQAF in self.uni:
-            # H502: `qamats` in non-last word with `maqaf` is `qamats-qatan` (qq-maqaf)
-            self.rules.append("H502")
-            guess.vowel = T.NAME_QAMATS_QATAN
-        elif T.POINT_HATAF_QAMATS == point and prev and T.NAME_QAMATS == prev.vowel:
-            # H503: `qamats` before `hataf-qamats` is `qamats-qatan` (qq-hataf-qamats)
-            self.rules.append("H503")
-            prev.vowel = T.NAME_QAMATS_QATAN
-        elif T.POINT_SHEVA == point:
-            self.parse_sheva(prev, guess, islast)
-
-    def parse_male(self, prev: Cluster, guess: Cluster):
-        """Apply `-male` rules."""
-        if guess.dagesh or guess.vowel:
-            return
-
-        if T.NAME_HIRIQ == prev.vowel and T.NAME_YOD == guess.letter:
-            # H301: `hiriq` before bare `yod` is `hiriq-male` (male-hiriq)
-            self.rules.append("H301")
-            prev.vowel = T.NAME_HIRIQ_MALE
-        elif T.NAME_TSERE == prev.vowel and guess.letter in ALEF_HE_YOD:
-            # H302: `tsere` before bare `alef|he|yod` is `tsere-male` (male-tsere)
-            self.rules.append("H302")
-            prev.vowel = T.NAME_TSERE_MALE
-        elif T.NAME_SEGOL == prev.vowel and guess.letter in ALEF_HE_YOD:
-            # H303: `segol` before bare `alef|he|yod` is `segol-male` (male-segol)
-            self.rules.append("H303")
-            prev.vowel = T.NAME_SEGOL_MALE
-        elif T.NAME_PATAH == prev.vowel and guess.letter in ALEF_HE:
-            # H304: `patah` before bare `alef|he` is `patah-male` (male-patah)
-            self.rules.append("H304")
-            prev.vowel = T.NAME_PATAH_MALE
-        elif T.NAME_QAMATS == prev.vowel and guess.letter in ALEF_HE:
-            # H305: `qamats` before bare `alef|he` is `qamats-male` (male-qamats)
-            self.rules.append("H305")
-            prev.vowel = T.NAME_QAMATS_MALE
-        elif T.NAME_HOLAM_HASER == prev.vowel and guess.letter in ALEF_HE:
-            # H306: `holam` before bare `alef|he` is `holam-male` (male-holam)
-            self.rules.append("H306")
-            prev.vowel = T.NAME_HOLAM_MALE
-
-    def parse(self):
-        """Return list of grammatical symbol names."""
-        num = len(self.lexed)
-        for i, token in enumerate(self.lexed):
-            islast = i == num - 1
-
-            letter = T.uniname(token.letter).lower()
-            if letter.startswith("final_"):
-                letter = f"{letter[6:]}-sofit"
-
-            vowel = None
-            if token.points:  # guess vowel name
-                vowel = T.uniname(token.points[0]).lower().replace("_", "-")
-                if not niqqudtype(vowel):
-                    vowel = None
-
-            guess = Cluster(letter=letter, dagesh=token.dagesh, vowel=vowel)
-            self.parse_letter(token, guess, islast)
-            for point in token.points:
-                self.parse_vowel(point, guess, islast)
-
-            if guess:
-                self.parsed.append(guess)
-
-        for i in range(len(self.parsed) - 1):
-            self.parse_male(self.parsed[i], self.parsed[i + 1])
-
-        return [name for group in self.parsed for name in group.tolist()]
-
-    def syllabify(self, strict=False):
+    def syllabify(self, parsed: List[Cluster], strict: bool = False):
         """Returns a list of syllables.
 
         Kwargs:
             strict (bool): if True, follow rules of havarot (default: False)
 
         Returns:
-            list<list<str>>. List of syllables (a lists of strings).
+            list[list[str]]. List of syllables (a lists of strings).
         """
         result, syllable = [], []
         syllable_break, last_vowel = False, ""
 
-        for group in self.parsed:
+        for group in parsed:
             syllable_break = False
 
             if isvowel(group.vowel):
                 # H001: syllable break before a vowel
-                self.rules.append("H001")
-                syllable_break = True
+                # self.rules.append("H001")
+                if self.allow("syllable-before-vowel", group):
+                    syllable_break = True
             elif T.NAME_SHEVA_NA == group.vowel or T.NAME_SHEVA_NA == last_vowel:
                 # H002: syllable break before and after `sheva-na`
-                self.rules.append("H002")
-                syllable_break = True
-
+                # self.rules.append("H002")
+                if self.allow("syllable-around-sheva-na", group):
+                    syllable_break = True
             if strict and NIQQUD_HATAF == niqqudtype(last_vowel):
                 # H003: (strict) no syllable break after hataf-vowel
-                self.rules.append("H003")
-                syllable_break = False
+                # self.rules.append("H003")
+                if self.allow("no-syllable-after-hataf", group):
+                    syllable_break = False
 
             if syllable and syllable_break:
                 result.append(syllable)
                 syllable = []
 
-            syllable += group.tolist()
-            last_vowel = group.vowel or ""
+            syllable += list(group)
+            last_vowel = group.vowel
 
         # iterated through all groups
 
