@@ -6,6 +6,8 @@
 from hebphonics.grammar import Token, Parser
 from hebphonics import tokens as T
 
+DEFAULT_DISABLE = ["qamats-qatan-closed-unaccented"]
+
 
 def test_lex_accents():
     """lex a string with several things"""
@@ -22,18 +24,6 @@ def test_lex_accents():
     assert parts == Parser.lex(word)
 
 
-def test_call():
-    """call a function with appropriate parameters"""
-    args = {"A": 1, "B": 2, "z": "works"}
-
-    def _fn(z, y=True, **kwargs):
-        assert y
-        assert {**kwargs, "z": z} == args
-
-    _fn.rule = "test-function"
-    Parser().call(_fn, **args)
-
-
 def test_empty():
     """Parse an empty string."""
     assert Parser().parse("") == []
@@ -41,8 +31,8 @@ def test_empty():
 
 def test_no_rules():
     """a word that doesn't require any special rules"""
-    word = r"אֵת"  # eith
-    parts = ["alef", "tsere", "sav"]
+    word = r"עַל"  # al
+    parts = ["ayin", "patah", "lamed"]
     assert parts == Parser().parse(word).flat()
 
 
@@ -86,7 +76,7 @@ def test_yissachar():
         "qamats",
         "resh",
     ]
-    assert parts == Parser().parse(word).flat()
+    assert parts == Parser(disabled=DEFAULT_DISABLE).parse(word).flat()
 
 
 def test_mitzvot_matzot():

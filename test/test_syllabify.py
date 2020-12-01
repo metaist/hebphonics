@@ -25,12 +25,12 @@ def test_break_before_vowel():
 
 def test_break_before_after_sheva_na():
     """syllable break before and after `sheva-na` (syl-around-sheva-na)"""
-    word = r"שָׁרְצוּ"  # sha-re-tsu
-    parts = [["shin", "qamats-gadol"], ["resh", "sheva-na"], ["tsadi", "shuruq"]]
+    word = r"יֵשְׁבוּ"  # yei-she-vu
+    parts = [["yod", "tsere"], ["shin", "sheva-na"], ["vet", "shuruq"]]
     p = Parser()
     assert parts == p.syllabify(p.parse(word))
 
-    word = r"בְּלִי"  # be-li
+    word = r"בְּלִי"  # be-li (traditional); bli (modern; TODO)
     parts = [["bet", "dagesh-qal", "sheva-na"], ["lamed", "hiriq-male-yod", "yod"]]
     p = Parser()
     assert parts == p.syllabify(p.parse(word))

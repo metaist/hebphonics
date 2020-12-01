@@ -43,18 +43,34 @@ def test_qamats_gadol_accent():
     assert parts == Parser().parse(word).flat()
 
 
-def test_qamats_qatan_before_sheva_nah():
-    """`qamats` before `sheva-nah` is `qamats-qatan`"""
-    word = r"אָזְנְךָ"  # oz-ne-ha
+# def test_qamats_qatan_before_midword_sheva_nah():
+#     """`qamats` before `sheva-nah` is `qamats-qatan`"""
+#     word = r"אָזְנְךָ"  # oz-ne-ha
+#     parts = [
+#         "alef",
+#         "qamats-qatan",
+#         "zayin",
+#         "sheva-nah",
+#         "nun",
+#         "sheva-na",
+#         "khaf-sofit",
+#         "qamats",
+#     ]
+#     assert parts == Parser().parse(word).flat()
+
+
+def test_qamats_before_midword_sheva_not_vav():
+    """`qamats` before midword `vav` with `sheva-nah` is NOT `qamats-qatan`"""
+    word = r"לַשָּׁוְא"
     parts = [
-        "alef",
-        "qamats-qatan",
-        "zayin",
+        "lamed",
+        "patah",
+        "shin",
+        "dagesh-hazaq",
+        "qamats-gadol",
+        "vav",
         "sheva-nah",
-        "nun",
-        "sheva-na",
-        "khaf-sofit",
-        "qamats",
+        "alef",
     ]
     assert parts == Parser().parse(word).flat()
 
@@ -96,25 +112,25 @@ def TODO_test_qamats_qatan_unstresssed_closed():
 #     assert parts == Parser().parse(word).flat()
 
 
-def test_qamats_qatan_before_hataf_qamats():
-    """H503: `qamats` before `hataf-qamats` is `qamats-qatan` (qq-hataf-qamats)"""
-    word = r"בַּצָּהֳרָיִם"
-    parts = [
-        "bet",
-        "dagesh-qal",
-        "patah",
-        "tsadi",
-        "dagesh-hazaq",
-        "qamats-qatan",
-        "he",
-        "hataf-qamats",
-        "resh",
-        "qamats-gadol",
-        "yod",
-        "hiriq",
-        "mem-sofit",
-    ]
-    assert parts == Parser().parse(word).flat()
+# def test_qamats_qatan_before_hataf_qamats():
+#     """H503: `qamats` before `hataf-qamats` is `qamats-qatan` (qq-hataf-qamats)"""
+#     word = r"בַּצָּהֳרָיִם"
+#     parts = [
+#         "bet",
+#         "dagesh-qal",
+#         "patah",
+#         "tsadi",
+#         "dagesh-hazaq",
+#         "qamats-qatan",
+#         "he",
+#         "hataf-qamats",
+#         "resh",
+#         "qamats-gadol",
+#         "yod",
+#         "hiriq",
+#         "mem-sofit",
+#     ]
+#     assert parts == Parser().parse(word).flat()
 
 
 def TODO_test_qamats_qatan_after_be_le_prefix():

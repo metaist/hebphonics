@@ -5,51 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>HebPhonics</title>
 
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@creativebulma/bulma-tooltip@1/dist/bulma-tooltip.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/tagify/3.21.0/tagify.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@yaireo/dragsort@1.0.8/dist/dragsort.min.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@creativebulma/bulma-tooltip@1/dist/bulma-tooltip.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/3.21.0/tagify.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/dragsort@1.0.8/dist/dragsort.min.css" />
+    <script defer src="https://use.fontawesome.com/releases/v5.15.1/js/all.js"></script>
 
-    <script
-      defer
-      src="https://use.fontawesome.com/releases/v5.15.1/js/all.js"
-    ></script>
-
-    <link
-      rel="stylesheet/less"
-      href="{{url_for('static', filename='app.less')}}"
-    />
+    <link rel="stylesheet/less" href="{{url_for('static', filename='app.less')}}" />
     <script src="//cdn.jsdelivr.net/npm/less"></script>
+    {% if GOOGLE_ANALYTICS_ID: %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{GOOGLE_ANALYTICS_ID}}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      var gtag = () => dataLayer.push(arguments);
+      gtag("js", new Date());
+      gtag("config", "{{GOOGLE_ANALYTICS_ID}}");
+    </script>
+    {% endif %}
   </head>
   <body class="has-navbar-fixed-top">
-    <nav
-      class="navbar is-link is-fixed-top"
-      role="navigation"
-      aria-label="main navigation"
-    >
+    <nav class="navbar is-link is-fixed-top" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
         <a class="navbar-item" href="https://hebphonics.com">
           <strong>HebPhonics</strong>
         </a>
 
-        <a
-          role="button"
-          class="navbar-burger"
-          aria-label="menu"
-          aria-expanded="false"
-        >
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
@@ -57,14 +38,8 @@
       </div>
       <div class="navbar-menu">
         <div class="navbar-end">
-          <a
-            class="navbar-item"
-            href="https://www.sbl-site.org/educational/BiblicalFonts_SBLHebrew.aspx"
-            >Hebrew Font</a
-          >
-          <a class="navbar-item" href="https://github.com/metaist/hebphonics"
-            >GitHub</a
-          >
+          <a class="navbar-item" href="https://www.sbl-site.org/educational/BiblicalFonts_SBLHebrew.aspx">Hebrew Font</a>
+          <a class="navbar-item" href="https://github.com/metaist/hebphonics">GitHub</a>
 
           <!-- <div class="navbar-item">
             <a class="button is-link is-inverted is-small" href="{{url_for("login")}}">Login</a>
@@ -80,15 +55,10 @@
           <!-- Syllables -->
           <div class="field has-text-centered">
             <label class="label">How many syllables?</label>
-            <div
-              id="syllen"
-              class="field is-grouped is-grouped-centered is-grouped-multiline"
-            >
+            <div id="syllen" class="field is-grouped is-grouped-centered is-grouped-multiline">
               {% for n in range(1, 8): %}
               <p class="control">
-                <label class="checkbox">
-                  <input name="syllen" type="checkbox" value="{{n}}" /> {{n}}
-                </label>
+                <label class="checkbox"> <input name="syllen" type="checkbox" value="{{n}}" /> {{n}} </label>
               </p>
               {% endfor %}
             </div>
@@ -101,15 +71,10 @@
           <!-- Frequency -->
           <div class="field has-text-centered">
             <label class="label">How common (lower = rare)?</label>
-            <div
-              id="freq"
-              class="field is-grouped is-grouped-centered is-grouped-multiline"
-            >
+            <div id="freq" class="field is-grouped is-grouped-centered is-grouped-multiline">
               {% for n in range(0, 6): %}
               <p class="control">
-                <label class="checkbox">
-                  <input name="freq" type="checkbox" value="{{n}}" /> {{n}}
-                </label>
+                <label class="checkbox"> <input name="freq" type="checkbox" value="{{n}}" /> {{n}} </label>
               </p>
               {% endfor %}
             </div>
@@ -208,12 +173,7 @@
           <div class="field has-text-centered">
             <label for="symbols" class="label">Which symbols?</label>
             <div class="control">
-              <select
-                class="select is-multiple"
-                id="symbols"
-                multiple
-                size="10"
-              >
+              <select class="select is-multiple" id="symbols" multiple size="10">
                 {% for s in symbols: %}
                 <option value="{{s}}">{{s}}</option>
                 {% endfor %}
@@ -286,10 +246,7 @@
           <!-- Result Order -->
           <div class="field">
             <!-- <label class="label">How should results be ordered?</label> -->
-            <div
-              id="order"
-              class="field is-grouped is-grouped-centered is-grouped-multiline"
-            >
+            <div id="order" class="field is-grouped is-grouped-centered is-grouped-multiline">
               <p class="control">
                 <label class="radio">
                   <input name="order" type="radio" value="alpha" checked />
@@ -297,23 +254,17 @@
                 </label>
               </p>
               <p class="control">
-                <label class="radio">
-                  <input name="order" type="radio" value="random" /> Random
-                </label>
+                <label class="radio"> <input name="order" type="radio" value="random" /> Random </label>
               </p>
               <p class="control">
-                <label class="radio">
-                  <input name="order" type="radio" value="freq" /> Frequncy
-                </label>
+                <label class="radio"> <input name="order" type="radio" value="freq" /> Frequncy </label>
               </p>
             </div>
           </div>
 
           <!-- Search -->
           <div class="buttons has-addons is-centered is-medium">
-            <button id="search" class="button is-link is-expanded">
-              Search
-            </button>
+            <button id="search" class="button is-link is-expanded">Search</button>
             <button id="reset" class="button is-danger">Reset</button>
           </div>
         </div>
@@ -342,7 +293,8 @@
     <footer class="footer has-text-centered">
       <small>
         <strong>HebPhonics</strong> by Shoshana Zazula<br />
-        Built by <a href="metaist.com">Metaist LLC</a> &bull; MIT License<br />
+        Built by <a href="metaist.com">Metaist LLC</a> &bull; MIT License &bull; <a href="https://paypal.me/metaist">Support</a
+        ><br />
         <a href="http://www.sbl-site.org/Fonts/SBL_Hbrw.ttf">SBL Hebrew Font</a>
         by Tiro Typeworks<br />
         <code>{{version}}</code>
@@ -356,8 +308,7 @@
       var $all = (sel, $dom = document) => [...$dom.querySelectorAll(sel)];
       var $on = ($dom, evt, fn) => $dom.addEventListener(evt, fn, false);
 
-      var getChecked = ($list) =>
-        $list.map(($d) => ($d.checked ? $d.value : null)).filter((v) => v);
+      var getChecked = ($list) => $list.map(($d) => ($d.checked ? $d.value : null)).filter((v) => v);
 
       var getJSON = (url) => fetch(url).then((response) => response.json());
       var postJSON = (url, args = null) => {
@@ -406,13 +357,15 @@
 
         init_tags: () => {
           var niqqud = $all("#symbols option").map((o) => o.value);
+          niqqud.push("word-start", "word-end");
+          console.log(niqqud);
+
           var options = {
             whitelist: niqqud,
             enforceWhitelist: true,
             duplicates: true,
             skipInvalid: true,
-            originalInputValueFormat: (valuesArr) =>
-              valuesArr.map((item) => item.value).join(","),
+            originalInputValueFormat: (valuesArr) => valuesArr.map((item) => item.value).join(","),
             autoComplete: { rightKey: true },
             dropdown: {
               enabled: 1,
@@ -444,9 +397,7 @@
         },
 
         check_all: ($dom, state = true) => {
-          $all('[type="checkbox"]', $dom).forEach(
-            (chk) => (chk.checked = state)
-          );
+          $all('[type="checkbox"]', $dom).forEach((chk) => (chk.checked = state));
         },
 
         /** Remove and then add classes to selected symbols. */
@@ -462,16 +413,8 @@
           app.check_all($one("#syllen"), false);
           app.check_all($one("#freq"), false);
           app.select_symbol("#books option", ["required", "excluded"], []);
-          app.select_symbol(
-            "#rules option",
-            ["find-any", "find-all", "find-none"],
-            []
-          );
-          app.select_symbol(
-            "#symbols option",
-            ["find-any", "find-all", "find-none"],
-            []
-          );
+          app.select_symbol("#rules option", ["find-any", "find-all", "find-none"], []);
+          app.select_symbol("#symbols option", ["find-any", "find-all", "find-none"], []);
           app.tag_seq.removeAllTags();
           app.tag_pat.removeAllTags();
         },
@@ -481,9 +424,7 @@
         from_json: (args) => {},
 
         to_json: () => {
-          var syllen = $all("#syllen :checked").map((o) =>
-            parseInt(o.value, 10)
-          );
+          var syllen = $all("#syllen :checked").map((o) => parseInt(o.value, 10));
           var freq = $all("#freq :checked").map((o) => parseInt(o.value, 10));
           var books_all = $all("#books .required").map((o) => o.value);
 
@@ -556,21 +497,22 @@
         details: (e) => {
           if (!e.target || !e.target.classList.contains("hebrew")) return;
 
-          var data = e.target.dataset;
+          var edata = e.target.dataset;
           var $container = $one("#details .message-body");
-          var link = `<a href="https://www.sefaria.org/${data["ref"]
+          var link = `<a href="https://www.sefaria.org/${edata["ref"]
             .replace(/[ :]/g, ".")
             .replace("^1\.", "I_")
-            .replace("^2\.", "II_")}?lang=bi" target="_blank">${
-            data["ref"]
-          }</a>`;
+            .replace("^2\.", "II_")}?lang=bi" target="_blank">${edata["ref"]}</a>`;
 
-          $container.innerHTML = `
-            <p><big>${e.target.innerText}</big> ${link}</p>
-            <p><strong>Frequency</strong>${data["frequency"]}</p>
-            <p><strong>Syllables</strong> <code>${data["syllables"]}</code></p>
-            <p><strong>Rules</strong> <code>${data["rules"]}</code></p>
+          postJSON("/display", { word: e.target.innerText }).then((data) => {
+            $container.innerHTML = `
+            <div>${data["data"]}</div>
+            <p>${link}</p>
+            <p><strong>Frequency</strong>${edata["frequency"]}</p>
+            <p><strong>Syllables</strong> <code>${edata["syllables"]}</code></p>
+            <p><strong>Rules</strong> <code>${edata["rules"]}</code></p>
           `;
+          });
         },
       };
 

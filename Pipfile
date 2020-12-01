@@ -8,18 +8,17 @@ black = "*"
 coverage = "*"
 pylint = "*"
 pytest = "*"
-grip = "*"
 
 [packages]
+beautifulsoup4 = "*"
 blinker = "*"
 flask = "*"
 flask-dance = {extras = ["sqla"], version = "*"}
 flask-login = "*"
 flask-sqlalchemy = "*"
-beautifulsoup4 = "*"
 lxml = "*"
-tqdm = "*"
 python-dotenv = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.8"

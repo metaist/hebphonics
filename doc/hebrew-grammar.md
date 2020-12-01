@@ -228,6 +228,7 @@ The purpose of this document is to explain how to translate a sequence of Unicod
 [yesod]: https://www.amazon.com/Ha-yesod-Fundamentals-Hebrew-English/dp/0873062140
 [yht-1]: https://yourhebrewtutor.com/2015/12/11/the-guttural-letters/
 [yht-2]: https://yourhebrewtutor.com/2016/01/14/a-friendly-reminder-the-shewa/
+[sbl-1]: https://www.sbl-site.org/Fonts/SBLHebrewUserManual1.5x.pdf
 
 <!-- -->
 

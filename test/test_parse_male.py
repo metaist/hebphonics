@@ -80,6 +80,20 @@ def test_patah_male():
     assert parts == Parser().parse(word).flat()
 
 
+def test_qamats_yod_vav():
+    """`qamats` followed by bare `yod` and `vav` is `qamats-yod-vav`"""
+    word = r"אֵלָיו"
+    parts = ["alef", "tsere", "lamed", "qamats-yod-vav", "yod", "vav"]
+    assert parts == Parser().parse(word).flat()
+
+
+def test_qamats_male_mapiq_he():
+    """`qamats` before bare `mapiq-he` is `qamats-male-he`"""
+    word = r"בָהּ"
+    parts = ["vet", "qamats-male-he", "mapiq-he", "mapiq"]
+    assert parts == Parser().parse(word).flat()
+
+
 def test_qamats_male():
     """`qamats` before bare `alef|he` is `qamats-male` (qamats-male)"""
     word = r"קָרָא"  # ka-ra
@@ -92,8 +106,8 @@ def test_qamats_male():
 
 
 def test_holam_male():
-    """H306: `holam` before bare `alef|he` is `holam-male` (male-holam)"""
-    word = "צֹאנְךָ"
+    """`holam` before bare `alef|he` is `holam-male` (holam-male)"""
+    word = "צֹאנְךָ"  # tzo-ne-cha
     parts = [
         "tsadi",
         "holam-male-alef",
@@ -101,6 +115,6 @@ def test_holam_male():
         "nun",
         "sheva-na",
         "khaf-sofit",
-        "qamats",
+        "qamats-gadol",
     ]
     assert parts == Parser().parse(word).flat()

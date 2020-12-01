@@ -106,7 +106,10 @@ SYMBOLS = {
     # sheva
     "sheva": point("POINT_SHEVA"),  # uncategorized sheva
     "sheva-na": point("POINT_SHEVA"),
+    "sheva-na-mute": point("POINT_SHEVA"),  # modern Hebrew
     "sheva-nah": point("POINT_SHEVA"),
+    "sheva-nah-voiced": point("POINT_SHEVA"),  # modern Hebrew
+    "sheva-gaya": point("POINT_SHEVA") + point("POINT_METEG"),  # Yemenite
     # hiriq
     "hiriq": point("POINT_HIRIQ"),
     "hiriq-male-yod": point("POINT_HIRIQ"),
@@ -125,6 +128,7 @@ SYMBOLS = {
     "patah": point("POINT_PATAH"),
     "patah-male-alef": point("POINT_PATAH"),
     "patah-male-he": point("POINT_PATAH"),
+    "patah-yod": point("POINT_PATAH"),
     "patah-genuvah": point("POINT_PATAH"),
     "hataf-patah": point("POINT_HATAF_PATAH"),
     # qamats
@@ -132,6 +136,8 @@ SYMBOLS = {
     "qamats-gadol": point("POINT_QAMATS"),
     "qamats-male-alef": point("POINT_QAMATS"),
     "qamats-male-he": point("POINT_QAMATS"),
+    "qamats-yod": point("POINT_QAMATS"),
+    "qamats-yod-vav": point("POINT_QAMATS"),
     "hataf-qamats": point("POINT_HATAF_QAMATS"),
     "qamats-qatan": point("POINT_QAMATS_QATAN"),
     # holam
@@ -148,7 +154,7 @@ SYMBOLS = {
     "alef": point("LETTER_ALEF"),
     "mapiq-alef": point("LETTER_ALEF"),
     "bet": point("LETTER_BET"),
-    "vet": point("LETTER_ALEF"),
+    "vet": point("LETTER_BET"),
     "gimel": point("LETTER_GIMEL"),
     "dalet": point("LETTER_DALET"),
     "he": point("LETTER_HE"),
@@ -171,8 +177,8 @@ SYMBOLS = {
     "ayin": point("LETTER_AYIN"),
     "pe": point("LETTER_PE"),
     "pe-sofit": point("LETTER_FINAL_PE"),
-    "fe": point("LETTER_FINAL_PE"),
-    "fe-sofit": point("LETTER_FINAL_FINAL_PE"),
+    "fe": point("LETTER_PE"),
+    "fe-sofit": point("LETTER_FINAL_PE"),
     "tsadi": point("LETTER_TSADI"),
     "tsadi-sofit": point("LETTER_FINAL_TSADI"),
     "qof": point("LETTER_QOF"),
@@ -242,8 +248,6 @@ def strip(uni: str) -> str:
     True
     """
     result = []
-    # print(uni, [uniname(t, mode="const", ignore=False) for t in uni])
-    # included = ["PUNCTUATION_MAQAF"]
     included = []
     excluded = ["POINT_METEG", "POINT_RAFE"]
     for token in uni:

@@ -4,6 +4,8 @@
 # pkg
 from hebphonics.grammar import Parser
 
+DEFAULT_DISABLE = ["qamats-qatan-closed-unaccented"]
+
 
 def test_mapiq_alef():
     """`dagesh` in `alef` is `mapiq-alef` (mapiq-alef)"""
@@ -15,7 +17,7 @@ def test_mapiq_alef():
 def test_mapiq_he():
     """`dagesh` in last `he` is `mapiq-he` (mapiq-he)"""
     word = r"בָּהּ"  # bah
-    parts = ["bet", "dagesh-qal", "qamats", "mapiq-he", "mapiq"]
+    parts = ["bet", "dagesh-qal", "qamats-male-he", "mapiq-he", "mapiq"]
     assert parts == Parser().parse(word).flat()
 
 
@@ -42,7 +44,7 @@ def test_bgdkft_after_vowel():
     """H104: `dagesh` in BGDKFT after vowel is `dagesh-hazaq` (dagesh-hazaq-bgdkft)"""
     word = r"שַׁבָּת"  # sha-bbath
     parts = ["shin", "patah", "bet", "dagesh-hazaq", "qamats", "sav"]
-    assert parts == Parser().parse(word).flat()
+    assert parts == Parser(disabled=DEFAULT_DISABLE).parse(word).flat()
 
 
 def test_bgdkft_not_after_vowel():
@@ -53,7 +55,7 @@ def test_bgdkft_not_after_vowel():
 
     word = "דָּבָר"  # da-var
     parts = ["dalet", "dagesh-qal", "qamats-gadol", "vet", "qamats", "resh"]
-    assert parts == Parser().parse(word).flat()
+    assert parts == Parser(disabled=DEFAULT_DISABLE).parse(word).flat()
 
     word = "פֶּה"  # poh
     parts = ["pe", "dagesh-qal", "segol-male-he", "he"]
@@ -70,7 +72,7 @@ def test_bgdkft_not_after_vowel():
         "qamats",
         "resh",
     ]
-    assert parts == Parser().parse(word).flat()
+    assert parts == Parser(disabled=DEFAULT_DISABLE).parse(word).flat()
 
 
 def test_other_dagesh():

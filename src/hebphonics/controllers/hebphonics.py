@@ -3,6 +3,7 @@
 """Controllers for HebPhonics."""
 # native
 import math
+import os
 
 # lib
 from flask import jsonify, render_template, request
@@ -10,7 +11,7 @@ from sqlalchemy.sql import and_, or_
 from sqlalchemy.sql.expression import desc, false, func
 
 # pkg
-from .. import app, tokens, rules, __version__, __pubdate__
+from .. import app, tokens as T, rules, grammar, __version__, __pubdate__
 from ..models import Book, Word, Occurrence
 from .jsend import JSend
 
@@ -25,9 +26,10 @@ def index():
     return render_template(
         "index.html",
         books=[b.name for b in Book.query.order_by(Book.id).all()],
-        symbols=list(tokens.SYMBOLS),
+        symbols=list(T.SYMBOLS),
         rules=rules.RULES,
         version=version,
+        GOOGLE_ANALYTICS_ID=os.getenv("GOOGLE_ANALYTICS_ID"),
     )
 
 
@@ -49,6 +51,47 @@ def list_word():
     ]
     sql = str(query.statement.compile(compile_kwargs={"literal_binds": True}))
     return jsonify(JSend(data=words, query=sql))
+
+
+@app.route("/display", methods=["POST"])
+def display_word():
+    """Typographical hints for words."""
+    word = request.json["word"]
+    parser = grammar.Parser()
+    parsed = parser.parse(word)
+    syls = parser.syl(parsed)
+    result = ""
+    L = len(syls) - 1
+    for num, syl in enumerate(syls):
+        if num > 0:
+            result += f"""
+<span class="letter">
+    <span class="base syllable"> | </span>
+    <span class="full syllable"></span>
+</span>
+"""
+        for sym in syl:
+            lett = f"{T.SYMBOLS.get(sym.letter, '')}{T.SYMBOLS.get(sym.dagesh, '')}"
+            vow = T.SYMBOLS.get(sym.vowel, "")
+            if sym.vowel in [T.NAME_HOLAM_MALE_VAV, T.NAME_SHURUQ]:
+                vow = ""
+
+            result += f"""
+<span class="letter">
+    <span class="base letter-{sym.letter} {sym.dagesh}">{lett}</span>
+    <span class="full vowel-{sym.vowel}">{lett}{vow}</span>
+</span>
+"""
+            if sym.vowel in [T.NAME_HOLAM_MALE_VAV, T.NAME_SHURUQ]:
+                lett = T.SYMBOLS.get("vav", "")
+                vow = T.SYMBOLS.get(sym.vowel, "")
+                result += f"""
+<span class="letter">
+    <span class="base letter-vav">{lett}</span>
+    <span class="full vowel-{sym.vowel}">{vow}</span>
+</span>
+"""
+    return jsonify(JSend(data=f'<div class="hebrew" dir="rtl">{result}</div>'))
 
 
 def _list(key: str, vals: dict) -> list:
@@ -104,21 +147,21 @@ def search(limit=1000, shemot=False, **kwargs):
     find_pat = _list("find_pat", kwargs)
 
     if find_any:
-        condition = [Word.syllables.like(f"%'{letter}'%") for letter in find_any]
+        condition = [Word.parsed.like(f"%'{letter}'%") for letter in find_any]
         query = query.filter(or_(*condition))
 
     if find_all:
-        condition = [Word.syllables.like(f"%'{letter}'%") for letter in find_all]
+        condition = [Word.parsed.like(f"%'{letter}'%") for letter in find_all]
         query = query.filter(and_(*condition))
 
     if find_none:
-        condition = [~Word.syllables.like(f"%'{letter}'%") for letter in find_none]
+        condition = [~Word.parsed.like(f"%'{letter}'%") for letter in find_none]
         query = query.filter(and_(*condition))
 
     if find_seq:
         quoted = [f"'{x}'" for x in find_seq]
         condition = f"%{'%'.join(quoted)}%"
-        query = query.filter(Word.syllables.like(condition))
+        query = query.filter(Word.parsed.like(condition))
 
     if find_pat:
         quoted = [f"'{x}'" for x in find_pat]
@@ -167,6 +210,7 @@ def search(limit=1000, shemot=False, **kwargs):
     else:
         query = query.order_by(Word.hebrew)
 
+    query = query.order_by(Occurrence.book_id)
     query = query.add_columns(
         Word.id, Word.hebrew, Word.syllables, Word.rules, freq_col, Occurrence.ref
     ).group_by(Word.hebrew)

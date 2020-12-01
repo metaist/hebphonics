@@ -13,14 +13,13 @@ NOTE
 
 # native
 from dataclasses import dataclass, field
-from inspect import Parameter, signature
+from typing import Any, Iterable, List, Iterator, Union
 import operator
-from typing import Any, Callable, Iterable, List, Iterator, Union
 import re
 
 # pkg
 from . import tokens as T
-from .rules import STAGES, isvowel, niqqudtype, NIQQUD_HATAF
+from .rules import STAGES, isvowel, NIQQUD_TYPES, NIQQUD_HATAF
 
 GEMATRIA_VALUES = {
     T.LETTER_ALEF: 1,
@@ -152,7 +151,7 @@ class BaseToken:
 
     def __bool__(self) -> bool:
         """Return True if any component is non-empty."""
-        return bool(self.items)
+        return bool(self.letter or self.dagesh or self.vowel)
 
     def __iter__(self) -> Iterator[str]:
         """Return an iterator over the items."""
@@ -213,6 +212,17 @@ class Token(BaseToken):
             + self.puncta
         )
 
+    def __bool__(self) -> bool:
+        """Return True if any component is non-empty."""
+        return bool(
+            self.letter
+            or self.dagesh
+            or self.vowel
+            or self.points
+            or self.accents
+            or self.puncta
+        )
+
     def __str__(self) -> str:
         """Return a string representation."""
         return "".join(self.items)
@@ -240,18 +250,18 @@ class Cluster(BaseToken):
 
     def reset(self) -> "Cluster":
         """Reset the values of all the properties."""
-        self.letter = ""
-        self.dagesh = ""
-        self.vowel = ""
-        self.isopen = False
-        self.rules = ItemList()
-        return self
+        return self.update(
+            letter="", dagesh="", vowel="", isopen=False, rules=ItemList()
+        )
 
     def update(self, **kwargs) -> "Cluster":
         """Sets the attributes of the cluster."""
-        for item in ["letter", "dagesh", "vowel", "isopen"]:
-            setattr(self, item, kwargs.get(item, getattr(self, item)))
+        self.__dict__.update(kwargs)
         return self
+
+
+class ParseError(Exception):
+    """Indicates a problem during parsing."""
 
 
 class Parser:
@@ -272,10 +282,17 @@ class Parser:
         `qamats-`, `male-`, and `sheva-`.
     """
 
+    STAGE_ORDER = [["vav", "dagesh"], ["male", "vowel", "sheva"], ["last"]]
+
     def __init__(self, enabled: List[str] = None, disabled: List[str] = None):
         """Construct a new parser with certain rules enabled or disabled."""
         self.enabled = enabled or []
         self.disabled = disabled or []
+        self.stages = {
+            name: [fn for fn in funcs if self.allow(fn.rule)]
+            for name, funcs in STAGES.items()
+        }
+        self.rules = [[self.stages.get(n, []) for n in ns] for ns in Parser.STAGE_ORDER]
 
     def allow(self, name: str, cluster: Cluster = None) -> bool:
         """Return True if the given rule is allowed."""
@@ -291,16 +308,22 @@ class Parser:
     @staticmethod
     def lex(uni: str) -> List[Token]:
         """Return list of grouped Unicode tokens."""
+        # pylint: disable=too-many-branches
         lexed = ItemList()
         token = Token()
         for symbol in uni:
             name = T.uniname(symbol, mode="const")
-            category = name.split("_", 1)[0]
+            if not name:
+                msg = f"Cannot lex symbol {T.unicode_name(symbol)} in word: >>{uni}<<"
+                raise ParseError(msg)
 
+            category = name.split("_", 1)[0]
             if category == "LETTER":
-                if token:  # add previous
+                if token.letter:  # add previous
                     lexed.append(token)
-                token = Token(letter=symbol)
+                    token = Token(letter=symbol)
+                else:  # in case accent came before the letter
+                    token.letter = symbol
             elif symbol in [T.POINT_SHIN_DOT, T.POINT_SIN_DOT]:
                 token.letter += symbol
             elif T.POINT_DAGESH_OR_MAPIQ == symbol:
@@ -315,6 +338,10 @@ class Parser:
                 token.puncta.append(symbol)
 
         if token:  # add last
+            if not token.letter:
+                msg = f"No letter in token {token!r} in word: >>{uni}<<"
+                raise ParseError(msg)
+
             lexed.append(token)
         return lexed
 
@@ -334,35 +361,16 @@ class Parser:
             vowel = T.NAME_HOLAM_HASER
         return Cluster(letter, dagesh, vowel, isopen=bool(vowel))
 
-    def call(self, fn: Callable, *args, **kwargs):
-        """Invoke a rule."""
-        rule_name = getattr(fn, "rule")
-        if not self.allow(rule_name):
-            return False
-
-        sig = signature(fn)
-        values = {}
-        for name, param in sig.parameters.items():
-            if param.kind == Parameter.VAR_KEYWORD:  # send all the values
-                values = kwargs
-                break
-            if name in kwargs:
-                values[name] = kwargs[name]
-        bound = sig.bind(*args, **values)
-        modified = fn(*bound.args, **bound.kwargs)
-        if modified:
-            modified.rules.append(rule_name)
-            return True
-        return False
-
     def parse(self, uni: str) -> List[Cluster]:
         """Return list of parsed cluster."""
+        # pylint: disable=too-many-locals
         parsed = ItemList()
         tokens = self.lex(T.normalize(uni))
         guesses = [self.guess(token) for token in tokens]
 
-        def _apply_rules(stages, append=True):
-            last_idx = len(tokens) - 1
+        last_idx = len(tokens) - 1
+        has_maqaf = uni and uni[-1] == T.PUNCTUATION_MAQAF
+        for group_num, group in enumerate(self.rules):
             prev2, prev1 = Cluster(), Cluster()
             for idx, token in enumerate(tokens):
                 guess = guesses[idx]
@@ -371,34 +379,62 @@ class Parser:
 
                 islast = idx == last_idx
                 context = dict(
-                    uni=uni,
                     idx=idx,
                     neg_idx=last_idx - idx,
+                    has_maqaf=has_maqaf,
                     isfirst=idx == 0,
                     islast=islast,
                     prev=prev1,
                     token=token,
                     guess=guess,
+                    guesses=guesses,
                     next_token=tokens[idx + 1] if not islast else Token(),
                     next_guess=guesses[idx + 1] if not islast else Cluster(),
                 )
 
-                for stage in stages:
-                    for fn in STAGES.get(stage, []):
+                for rules in group:
+                    for fn in rules:
                         context["last_vowel"] = prev1.vowel or prev2.vowel
-                        if self.call(fn, **context):
+                        modified = fn(
+                            **{k: v for k, v in context.items() if k in fn.params}
+                        )
+                        if modified:
+                            modified.rules.append(fn.rule)
                             break
 
                 prev2, prev1 = prev1, guess
-                if append:
+                if group_num == 0:
                     parsed.append(guess)
-
-        _apply_rules(["vav", "dagesh"])
-        _apply_rules(["male", "vowel", "sheva"], append=False)
-        _apply_rules(["last"], append=False)
         return parsed
 
-    def syllabify(self, parsed: List[Cluster], strict: bool = False):
+    @staticmethod
+    def syl(parsed: List[Cluster]) -> List[List[Cluster]]:
+        """Return parsed clusters grouped by syllable."""
+        result, syllable = [], []
+        syllable_break, last_vowel = False, ""
+        for group in parsed:
+            syllable_break = False
+
+            if isvowel(group.vowel):
+                # syllable break before a vowel
+                syllable_break = True
+            elif group.vowel.startswith(T.NAME_SHEVA_NAH):
+                # no syllable break before `sheva-nah`
+                syllable_break = False
+
+            if syllable and syllable_break:
+                result.append(syllable)
+                syllable = []
+
+            syllable.append(group)
+            last_vowel = group.vowel
+        # iterated through all groups
+        if syllable:  # add the last syllable
+            result.append(syllable)
+        return result
+
+    @staticmethod
+    def syllabify(parsed: List[Cluster], strict: bool = False):
         """Returns a list of syllables.
 
         Kwargs:
@@ -416,18 +452,18 @@ class Parser:
             if isvowel(group.vowel):
                 # H001: syllable break before a vowel
                 # self.rules.append("H001")
-                if self.allow("syllable-before-vowel", group):
-                    syllable_break = True
+                # if self.allow("syllable-before-vowel", group):
+                syllable_break = True
             elif T.NAME_SHEVA_NA == group.vowel or T.NAME_SHEVA_NA == last_vowel:
                 # H002: syllable break before and after `sheva-na`
                 # self.rules.append("H002")
-                if self.allow("syllable-around-sheva-na", group):
-                    syllable_break = True
-            if strict and NIQQUD_HATAF == niqqudtype(last_vowel):
+                # if self.allow("syllable-around-sheva-na", group):
+                syllable_break = True
+            if strict and NIQQUD_HATAF == NIQQUD_TYPES.get(last_vowel):
                 # H003: (strict) no syllable break after hataf-vowel
                 # self.rules.append("H003")
-                if self.allow("no-syllable-after-hataf", group):
-                    syllable_break = False
+                # if self.allow("no-syllable-after-hataf", group):
+                syllable_break = False
 
             if syllable and syllable_break:
                 result.append(syllable)

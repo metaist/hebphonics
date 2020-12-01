@@ -88,10 +88,43 @@
   position: fixed;
   bottom: 0;
   right: 0;
-  width: 30rem;
+  width: 35rem;
 
   .message {
     font-size: 0.8rem;
+  }
+
+  .hebrew {
+    display: flex;
+    font-size: 500%;
+
+    .letter {
+      display: grid;
+
+      span {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .base {
+        z-index: 1;
+      }
+
+      .base,
+      .full {
+        text-align: center;
+      }
+
+      .vowel-sheva-nah-voiced {
+        color: blue;
+      }
+
+      .vowel-sheva-na,
+      .vowel-sheva-na-muted,
+      .vowel-qamats-qatan {
+        color: red;
+      }
+    }
   }
 }
 
