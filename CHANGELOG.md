@@ -9,6 +9,17 @@ The format is based on [Keep a Changelog] and this project adheres to [Semantic 
 
 ---
 
+[1.0.1]: https://github.com/metaist/hebphonics/compare/1.0.0...1.0.1
+
+## [1.0.1] - 2020-12-01T04:58:15Z
+
+**Added**
+
+- additional Tanakh parsers
+- syllable display
+
+---
+
 [1.0.0]: https://github.com/metaist/hebphonics/commits/1.0.0
 
 ## [1.0.0] - 2020-11-20T20:23:32Z
