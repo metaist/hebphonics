@@ -17,7 +17,9 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id={{GOOGLE_ANALYTICS_ID}}"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      var gtag = () => dataLayer.push(arguments);
+      function gtag() {
+        dataLayer.push(arguments);
+      }
       gtag("js", new Date());
       gtag("config", "{{GOOGLE_ANALYTICS_ID}}");
     </script>
