@@ -1,6 +1,12 @@
+.hebrew,
+.hebrew-wrapper {
+  break-inside: avoid;
+}
+
 .hebrew {
   font-family: "SBL Hebrew", serif;
   font-size: 200%;
+  break-inside: avoid;
 }
 
 .state-empty {
@@ -10,7 +16,7 @@
   }
 
   .when-full {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -20,7 +26,7 @@
   }
 
   .when-empty {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -48,7 +54,8 @@
   }
 }
 
-#symbols {
+#symbols,
+#rules {
   width: 15rem;
 
   option {
@@ -70,16 +77,70 @@
 }
 
 #results {
-  column-width: 9rem;
+  display: flex;
+  flex-wrap: wrap;
+  .hebrew {
+    width: 9rem;
+  }
+}
+
+#details {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 35rem;
+
+  .message {
+    font-size: 0.8rem;
+  }
+
+  .hebrew {
+    display: flex;
+    font-size: 500%;
+
+    .letter {
+      display: grid;
+
+      span {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .base {
+        z-index: 1;
+      }
+
+      .base,
+      .full {
+        text-align: center;
+      }
+
+      .vowel-sheva-nah-voiced {
+        color: blue;
+      }
+
+      .vowel-sheva-na,
+      .vowel-sheva-na-muted,
+      .vowel-qamats-qatan {
+        color: red;
+      }
+    }
+  }
 }
 
 @media print {
   body {
-    margin: 3em;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    .section {
+      padding-top: 1.5rem;
+    }
   }
 
   nav,
   #search-form,
+  #details,
   footer,
   .noprint {
     display: none;

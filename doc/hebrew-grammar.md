@@ -219,13 +219,16 @@ The purpose of this document is to explain how to translate a sequence of Unicod
 - [yesod] Uveeler, Luba, Norman M. Bronznick. _Ha-Yesod: Fundamentals of Hebrew_. New York: Feldheim, 1980.
 - [yht-1], [yht-2]
 
+[beki-1]: https://www.beki.org/wp-content/uploads/Point-of-Grammar.pdf
 [hs-1]: https://hebrewsyntax.org/rbh1/RBH_02%D7%90_Hebrew_vowels.pdf
 [ki-1]: http://kingdominfo.net/Dagesh_Rules.pdf
+[os-1]: https://opensiddur.org/help/rules-for-niqqud/
 [shaila-1]: http://www.shailamorah.com/kriah-roundtable/teaching-shva-rules
 [ulpan]: http://www.ulpan.net/kamatz-katan
 [yesod]: https://www.amazon.com/Ha-yesod-Fundamentals-Hebrew-English/dp/0873062140
 [yht-1]: https://yourhebrewtutor.com/2015/12/11/the-guttural-letters/
 [yht-2]: https://yourhebrewtutor.com/2016/01/14/a-friendly-reminder-the-shewa/
+[sbl-1]: https://www.sbl-site.org/Fonts/SBLHebrewUserManual1.5x.pdf
 
 <!-- -->
 
