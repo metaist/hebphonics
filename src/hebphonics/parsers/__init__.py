@@ -25,7 +25,7 @@ import requests
 
 # pkg
 from .. import app, grammar, tokens as T
-from ..models import db_create, db, Book, Word, Occurrence
+from ..models import db_create, db, Book, Word, Freq
 
 USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -137,15 +137,15 @@ def parse_word(parser, raw, clean, ref):
         # no letters or vowels
         return None
 
-    syllables = parser.syllabify(parsed)
+    syllables = parser.syl(parsed).json
     return dict(
         hebrew=clean,
         shemot=grammar.isshemot(clean),
         gematria=grammar.gematria(clean),
-        parsed=str(parsed.flat()),
-        syllables=str(syllables),
         syllen=len(syllables),
+        parsed=str(parsed.flat()),
         rules=str(parsed.rules.flat()),
+        syls=syllables,
     )
 
 
@@ -197,7 +197,7 @@ def save_database(lock, pos, write_q):
                 )
             )
 
-        for obj, values in {Book: books, Word: words, Occurrence: occur}.items():
+        for obj, values in {Book: books, Word: words, Freq: occur}.items():
             if not values:
                 continue
             db.engine.execute(obj.__table__.insert().values(values))
@@ -253,5 +253,5 @@ def save_words(lock, pos, write_q):
                 )
             )
 
-        for obj, values in {Book: book, Word: words, Occurrence: occur}.items():
+        for obj, values in {Book: book, Word: words, Freq: occur}.items():
             db.engine.execute(obj.__table__.insert().values(values))

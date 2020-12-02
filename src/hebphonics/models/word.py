@@ -7,10 +7,11 @@ from . import db, BaseMixin
 
 
 class Book(BaseMixin, db.Model):
-    """Hebrew book."""
+    """Hebrew text."""
 
-    name = db.Column(db.String, unique=True)
-    freqs = db.relationship("Occurrence", backref="book")
+    name = db.Column(db.String)
+    corpus = db.Column(db.String)
+    freqs = db.relationship("Freq", backref="book")
 
 
 class Word(BaseMixin, db.Model):
@@ -19,14 +20,14 @@ class Word(BaseMixin, db.Model):
     hebrew = db.Column(db.Unicode, index=True, unique=True)
     shemot = db.Column(db.Boolean, default=False)
     gematria = db.Column(db.Integer)
-    parsed = db.Column(db.String, index=True)
-    syllables = db.Column(db.String)
     syllen = db.Column(db.Integer)  # number of syllables
+    parsed = db.Column(db.String, index=True)
     rules = db.Column(db.String)  # parse rules applied
+    syls = db.Column(db.JSON)
 
 
-class Occurrence(BaseMixin, db.Model):
-    """Occurrence of a word in a book."""
+class Freq(BaseMixin, db.Model):
+    """Word in a text."""
 
     book_id = db.Column(db.Integer, db.ForeignKey("book.id"))
     word_id = db.Column(db.Integer, db.ForeignKey("word.id"))
@@ -34,4 +35,4 @@ class Occurrence(BaseMixin, db.Model):
     ref = db.Column(db.String)  # first time it appears
     freq = db.Column(db.Integer, default=1)  # how often it appears
 
-    word = db.relationship("Word", backref="freqs")
+    word = db.relationship(Word, backref="freqs")

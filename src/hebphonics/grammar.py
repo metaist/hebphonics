@@ -161,6 +161,11 @@ class BaseToken:
         """Return length of items."""
         return len(self.items)
 
+    @property
+    def json(self) -> dict:
+        """Return attributes as a `dict`."""
+        return self.__dict__
+
     def has(self, **kwargs):
         """Return True if the token has the attributes listed."""
         result = True
@@ -246,6 +251,7 @@ class Cluster(BaseToken):
     """Grammatical cluster of a letter, dagesh, and vowel."""
 
     isopen: bool = False
+    hasemph: bool = False
     rules: List[str] = field(default_factory=ItemList)
 
     def reset(self) -> "Cluster":
@@ -410,24 +416,15 @@ class Parser:
     @staticmethod
     def syl(parsed: List[Cluster]) -> List[List[Cluster]]:
         """Return parsed clusters grouped by syllable."""
-        result, syllable = [], []
-        syllable_break, last_vowel = False, ""
+        result, syllable = ItemList(), ItemList()
+        add_break = False
         for group in parsed:
-            syllable_break = False
-
-            if isvowel(group.vowel):
-                # syllable break before a vowel
-                syllable_break = True
-            elif group.vowel.startswith(T.NAME_SHEVA_NAH):
-                # no syllable break before `sheva-nah`
-                syllable_break = False
-
-            if syllable and syllable_break:
+            add_break = group.vowel and not group.vowel.startswith(T.NAME_SHEVA_NAH)
+            if syllable and add_break:
                 result.append(syllable)
-                syllable = []
-
+                syllable = ItemList()
             syllable.append(group)
-            last_vowel = group.vowel
+
         # iterated through all groups
         if syllable:  # add the last syllable
             result.append(syllable)

@@ -36,4 +36,4 @@ def sqlite_engine_connect(conn, _):
 # NOTE: do this import now to avoid circular import
 # pylint: disable=wrong-import-position
 from .user import User, OAuth
-from .word import Book, Word, Occurrence
+from .word import Book, Word, Freq

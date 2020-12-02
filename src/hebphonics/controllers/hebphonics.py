@@ -2,7 +2,6 @@
 # coding: utf-8
 """Controllers for HebPhonics."""
 # native
-import math
 import os
 
 # lib
@@ -11,8 +10,9 @@ from sqlalchemy.sql import and_, or_
 from sqlalchemy.sql.expression import desc, false, func
 
 # pkg
-from .. import app, tokens as T, rules, grammar, __version__, __pubdate__
-from ..models import Book, Word, Occurrence
+from .. import app, tokens as T, rules, __version__, __pubdate__
+from ..grammar import ItemList, Cluster, Parser
+from ..models import Book, Word, Freq
 from .jsend import JSend
 
 
@@ -38,60 +38,78 @@ def list_word():
     """Search database."""
     args = request.json
     query = search(**args)
-    words = [
-        {
-            "h": w.hebrew,
-            "s": w.syllables,
-            "r": w.rules,
-            "f": w.freq,
-            "l": round(math.log(w.freq)),
-            "e": w.ref,
-        }
-        for w in query.all()
-    ]
+    words = [{"h": w.hebrew, "f": w.freq, "r": w.ref} for w in query.all()]
     sql = str(query.statement.compile(compile_kwargs={"literal_binds": True}))
     return jsonify(JSend(data=words, query=sql))
+
+
+def _block_letter(base, bclasses, btool, full, fclasses, ftool, rules=""):
+    if rules:
+        rules = f"[{rules}]"
+
+    tool = "\n".join([x for x in [btool, ftool, rules] if x]).strip()
+    if tool:
+        tool = f' data-tooltip="{tool}"'
+    return f"""
+<span class="letter">
+    <span class="base {' '.join(bclasses)} has-tooltip-left"{tool}>{base}</span>
+    <span class="full {' '.join(fclasses)}">{full}</span>
+</span>"""
 
 
 @app.route("/display", methods=["POST"])
 def display_word():
     """Typographical hints for words."""
     word = request.json["word"]
-    parser = grammar.Parser()
-    parsed = parser.parse(word)
-    syls = parser.syl(parsed)
+    query = Word.query.filter(Word.hebrew == word).first()
+    if query:
+        syls = ItemList([ItemList([Cluster(**t) for t in s]) for s in query.syls])
+    else:
+        parser = Parser()
+        parsed = parser.parse(word)
+        syls = parser.syl(parsed)
+
     result = ""
-    L = len(syls) - 1
     for num, syl in enumerate(syls):
         if num > 0:
-            result += f"""
-<span class="letter">
-    <span class="base syllable"> | </span>
-    <span class="full syllable"></span>
-</span>
-"""
+            result += _block_letter(" | ", ["syllable"], "", "", ["syllable"], "")
+
         for sym in syl:
             lett = f"{T.SYMBOLS.get(sym.letter, '')}{T.SYMBOLS.get(sym.dagesh, '')}"
             vow = T.SYMBOLS.get(sym.vowel, "")
             if sym.vowel in [T.NAME_HOLAM_MALE_VAV, T.NAME_SHURUQ]:
                 vow = ""
 
-            result += f"""
-<span class="letter">
-    <span class="base letter-{sym.letter} {sym.dagesh}">{lett}</span>
-    <span class="full vowel-{sym.vowel}">{lett}{vow}</span>
-</span>
-"""
+            result += _block_letter(
+                lett,
+                [f"letter-{sym.letter}", sym.dagesh],
+                sym.letter,
+                f"{lett}{vow}",
+                [f"vowel-{sym.vowel}"],
+                sym.vowel,
+                ", ".join(sym.rules),
+            )
+
             if sym.vowel in [T.NAME_HOLAM_MALE_VAV, T.NAME_SHURUQ]:
                 lett = T.SYMBOLS.get("vav", "")
                 vow = T.SYMBOLS.get(sym.vowel, "")
-                result += f"""
-<span class="letter">
-    <span class="base letter-vav">{lett}</span>
-    <span class="full vowel-{sym.vowel}">{vow}</span>
-</span>
-"""
-    return jsonify(JSend(data=f'<div class="hebrew" dir="rtl">{result}</div>'))
+                result += _block_letter(
+                    lett,
+                    ["letter-vav"],
+                    "",
+                    vow,
+                    [f"vowel-{sym.vowel}"],
+                    sym.vowel,
+                    ", ".join(sym.rules),
+                )
+
+    return jsonify(
+        JSend(
+            display=f'<div class="hebrew" dir="rtl">{result}</div>',
+            syllables=str([x.flat() for x in syls]),
+            rules=str(syls.rules.flat()),
+        )
+    )
 
 
 def _list(key: str, vals: dict) -> list:
@@ -129,7 +147,7 @@ def search(limit=1000, shemot=False, **kwargs):
         list<Word>. Words that match the criteria.
     """
     # pylint: disable=too-many-locals, too-many-branches, too-many-statements
-    query = Word.query.join(Occurrence)
+    query = Word.query.join(Freq)
 
     if not shemot:
         query = query.filter(Word.shemot == false())
@@ -196,7 +214,7 @@ def search(limit=1000, shemot=False, **kwargs):
     if syllen:
         query = query.filter(Word.syllen.in_(syllen))
 
-    freq_col = func.sum(Occurrence.freq).label("freq")
+    freq_col = func.sum(Freq.freq).label("freq")
     if freq:
         condition = [freq_col.between(5 ** n, 5 ** (n + 1)) for n in freq]
         query = query.having(or_(*condition))
@@ -210,9 +228,13 @@ def search(limit=1000, shemot=False, **kwargs):
     else:
         query = query.order_by(Word.hebrew)
 
-    query = query.order_by(Occurrence.book_id)
+    query = query.order_by(Freq.book_id)
     query = query.add_columns(
-        Word.id, Word.hebrew, Word.syllables, Word.rules, freq_col, Occurrence.ref
+        # Word.id, Word.hebrew, Word.parsed, Word.rules, freq_col, Freq.ref
+        Word.id,
+        Word.hebrew,
+        freq_col,
+        Freq.ref,
     ).group_by(Word.hebrew)
 
     # Limits

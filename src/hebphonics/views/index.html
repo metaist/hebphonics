@@ -481,15 +481,7 @@
             }
 
             var p = '<p title="${w.s}" >';
-            words = words.map(
-              (w) => `
-              <div class="hebrew" dir="rtl" lang="he"
-                data-frequency="${w.f}"
-                data-syllables="${w.s}"
-                data-rules="${w.r}"
-                data-ref="${w.e}">${w.h}</div>
-            `
-            );
+            words = words.map((w) => `<div class="hebrew" dir="rtl" lang="he" data-freq="${w.f}" data-ref="${w.r}">${w.h}</div>`);
             $results.innerHTML = words.join("");
             $container.classList.remove("state-empty");
             $container.classList.add("state-full");
@@ -508,11 +500,11 @@
 
           postJSON("/display", { word: e.target.innerText }).then((data) => {
             $container.innerHTML = `
-            <div>${data["data"]}</div>
+            <div>${data["display"]}</div>
             <p>${link}</p>
-            <p><strong>Frequency</strong>${edata["frequency"]}</p>
-            <p><strong>Syllables</strong> <code>${edata["syllables"]}</code></p>
-            <p><strong>Rules</strong> <code>${edata["rules"]}</code></p>
+            <p><strong>Frequency</strong> ${edata["freq"]}</p>
+            <p><strong>Syllables</strong> <code>${data["syllables"]}</code></p>
+            <p><strong>Rules</strong> <code>${data["rules"]}</code></p>
           `;
           });
         },
