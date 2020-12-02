@@ -48,7 +48,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 # pkg
-from . import parse_args, download_unzip, Msg, queuer, spawn_processes, save_words
+from . import parse_args, download_unzip, Msg, queuer, spawn_processes, save_database
 from .. import tokens as T
 
 
@@ -63,26 +63,30 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
     tqdm.set_lock(lock)
     for msg in queuer(read_q):
         with open(msg.data) as stream:
-            stats = {}
+            result = {"books": [], "words": {}}
+
             soup = BeautifulSoup(stream, "xml")
             book = soup.Tanach.tanach.book
             book_name = str(soup.names.find_all("name")[0].string)
             book_num = int(soup.names.number.string)
+            result["books"].append(dict(id=book_num, name=book_name))
 
             desc = f"{os.getpid()} COUNT {book_name:<15}"
             for word in tqdm(book.find_all(["w", "q"]), desc=desc, position=pos):
                 # NOTE: We ignore nested <x> and keep nested <s>!
                 raw = get_word(word)
                 clean = T.strip(raw)
-                if clean in stats:
-                    stats[clean]["freq"] += 1
+                if clean in result:
+                    result["words"][clean]["freq"] += 1
                 else:
                     chapter = word.parent.parent["n"]
                     verse = word.parent["n"]
                     ref = f"{book_name} {chapter}:{verse}"
-                    stats[clean] = {"freq": 1, "ref": ref, "raw": raw}
+                    result["words"][clean] = dict(
+                        book_id=book_num, freq=1, ref=ref, raw=raw
+                    )
 
-        write_q.put(Msg("SAVE", {"num": book_num, "name": book_name, "words": stats}))
+        write_q.put(Msg("SAVE", result))
 
 
 def list_books(read_q: Queue, index: Path):
@@ -119,7 +123,7 @@ def main(argv: List[str] = None):
         path_index = Path(args["--index"]).resolve()
 
     init_fn = partial(list_books, index=path_index)
-    spawn_processes(init_fn, count_words, save_words, num_readers, num_writers)
+    spawn_processes(init_fn, count_words, save_database, num_readers, num_writers)
 
 
 if __name__ == "__main__":  # pragma: no cover

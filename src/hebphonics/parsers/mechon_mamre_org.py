@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Download and parse tanakh from <http://mechon-mamre.org/>.
+"""Download and parse Tanakh from <http://mechon-mamre.org/>.
 
 The text is based on the [Aleppo Codex][1].
 
@@ -44,7 +44,7 @@ import re
 from tqdm import tqdm
 
 # pkg
-from . import parse_args, download_unzip, Msg, queuer, spawn_processes, save_words
+from . import parse_args, download_unzip, Msg, queuer, spawn_processes, save_database
 from .. import tokens as T
 
 
@@ -58,11 +58,13 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
     re_name = re.compile(r"<H1>(.*)</H1>")
     re_ref = re.compile(r"<B>(.*)</B>")
     for msg in queuer(read_q):
-        stats = {}
+        result = {"books": [], "words": {}}
+
         book = Path(msg.data)
         text = book.read_text()
         book_num = int(book.stem[1:], 10)
         book_name = re_name.search(text)[1]
+        result["books"].append(dict(id=book_num, name=book_name))
 
         desc = f"{os.getpid()} COUNT {book_name:<15}"
         for line in tqdm(text.split("\n"), desc=desc, position=pos):
@@ -72,7 +74,7 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
 
             chapter, verse = re_ref.search(line)[1].split(",")
             # chapter, verse = grammar.gematria(chapter), grammar.gematria(verse)
-            line = re_ref.sub("", line)
+            line = re_ref.sub("", line)  # reference removed
 
             line = line.replace(T.PUNCTUATION_MAQAF, T.PUNCTUATION_MAQAF + " ")
             for raw in line.split():
@@ -80,12 +82,14 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
                 if not clean:
                     continue
 
-                if clean in stats:
-                    stats[clean]["freq"] += 1
+                if clean in result["words"]:
+                    result["words"][clean]["freq"] += 1
                 else:
                     ref = f"{book_name} {chapter}:{verse}"
-                    stats[clean] = {"freq": 1, "ref": ref, "raw": raw}
-        write_q.put(Msg("SAVE", {"num": book_num, "name": book_name, "words": stats}))
+                    result["words"][clean] = dict(
+                        book_id=book_num, freq=1, ref=ref, raw=raw
+                    )
+        write_q.put(Msg("SAVE", result))
 
 
 def list_books(read_q: Queue, folder: Path):
@@ -117,7 +121,7 @@ def main(argv: List[str] = None):
         folder = Path(args["--index"]).resolve()
 
     init_fn = partial(list_books, folder=folder)
-    spawn_processes(init_fn, count_words, save_words, num_readers, num_writers)
+    spawn_processes(init_fn, count_words, save_database, num_readers, num_writers)
 
 
 if __name__ == "__main__":  # pragma: no cover
