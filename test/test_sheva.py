@@ -4,58 +4,64 @@
 # pkg
 from hebphonics.grammar import Parser
 
-DEFAULT_DISABLE = ["qamats-qatan-closed-unaccented"]
-
 
 def test_not_real_sheva():
     """an unknown kind of sheva"""
-    word = r"זרְע"
+    word = r"זרְע"  # zra (synthetic)
     parts = ["zayin", "resh", "sheva", "ayin"]
     assert parts == Parser().parse(word).flat()
 
 
 def test_sheva_gaya():
     """`sheva` with a `meteg` is a `sheva-gaya`"""
-    word = r"וְֽנָשׁ֔וּבָה"
+    word = "נְֽסָה"  # ne-sah (Psalms 4:7)
+    parts = ["nun", "sheva-gaya", "samekh", "qamats-gadol", "eim-qria-he"]
+    assert parts == Parser().parse(word).flat()
+
+
+def test_sheva_merahef():
+    """`sheva` before BGDKFT without `dagesh` is `sheva-merahef`"""
+    word = r"מַלְכֵי"
+    parts = ["mem", "patah", "lamed", "sheva-merahef", "khaf", "tsere", "eim-qria-yod"]
+    assert parts == Parser().parse(word).flat()
+
+
+def test_sheva_merahef_before_sheva():
+    """In case of a `sheva-merahef` immediately before another `sheva`, skip"""
+    word = r"וְיִפְדְיָה"  # ve-yif-de-ya
     parts = [
         "vav",
-        "sheva-gaya",
-        "nun",
+        "sheva-na",
+        "yod",
+        "hiriq",
+        "fe",
+        "sheva-nah",
+        "dalet",
+        "sheva-na",
+        "yod",
         "qamats-gadol",
-        "shin",
-        "shuruq",
-        "vet",
-        "qamats-male-he",
-        "he",
+        "eim-qria-he",
     ]
     assert parts == Parser().parse(word).flat()
 
 
 def test_sheva_na_start():
     """`sheva` at word start is `sheva-na` (sheva-na-start)"""
-    word = r"וְאֵת"  # ve-et
+    word = r"וְאֵת"  # ve-et (Genesis 1:16)
     parts = ["vav", "sheva-na", "alef", "tsere", "sav"]
-    assert parts == Parser().parse(word).flat()
-
-    word = r"קְדוֹשׁ"  # ke-dosh
-    parts = ["qof", "sheva-na-mute", "dalet", "holam-male-vav", "shin"]
-    assert parts == Parser().parse(word).flat()
-
-    word = r"בְּלִי"  # be-li
-    parts = ["bet", "dagesh-qal", "sheva-na", "lamed", "hiriq-male-yod", "yod"]
     assert parts == Parser().parse(word).flat()
 
 
 def test_sheva_nah_end():
     """`sheva` at word end is `sheva-nah` (sheva-nah-end)"""
-    word = r"לָךְ"  # lach
-    parts = ["lamed", "qamats", "khaf-sofit", "sheva-nah"]
+    word = r"לָֽךְ"  # lach (Exodus 33:14)
+    parts = ["lamed", "qamats-gadol", "khaf-sofit", "sheva-nah"]
     assert parts == Parser().parse(word).flat()
 
 
 def test_sheva_nah_alef_end():
     """`sheva` before last bare `alef` is `sheva-nah` (sheva-nah-alef-end)"""
-    word = "חֵטְא"  # cheit
+    word = "חֵטְא"  # cheit (Leviticus 19:17)
     parts = ["het", "tsere", "tet", "sheva-nah", "alef"]
     assert parts == Parser().parse(word).flat()
 
@@ -67,13 +73,6 @@ def test_sheva_double_end():
     assert parts == Parser().parse(word).flat()
 
 
-def test_double_sheva_middle():
-    """two `sheva` midword are `sheva-nah`, `sheva-na` (sheva-double-middle)"""
-    word = r"יִמְשְׁלוּ"  # yim-she-lu
-    parts = ["yod", "hiriq", "mem", "sheva-nah", "shin", "sheva-na", "lamed", "shuruq"]
-    assert parts == Parser().parse(word).flat()
-
-
 def test_sheva_na_double_letter():
     """`sheva` before same letter is `sheva-na` (sheva-na-double-letter)"""
     word = r"הַלְלוּ"  # ha-le-lu
@@ -81,7 +80,14 @@ def test_sheva_na_double_letter():
     assert parts == Parser().parse(word).flat()
 
     word = r"הִנְנִי"  # hi-ne-ni (has vowel under second letter)
-    parts = ["he", "hiriq", "nun", "sheva-na", "nun", "hiriq-male-yod", "yod"]
+    parts = ["he", "hiriq", "nun", "sheva-na", "nun", "hiriq-male-yod", "eim-qria-yod"]
+    assert parts == Parser().parse(word).flat()
+
+
+def test_double_sheva_middle():
+    """two `sheva` midword are `sheva-nah`, `sheva-na` (sheva-double-middle)"""
+    word = r"יִמְשְׁלוּ"  # yim-she-lu
+    parts = ["yod", "hiriq", "mem", "sheva-nah", "shin", "sheva-na", "lamed", "shuruq"]
     assert parts == Parser().parse(word).flat()
 
 
@@ -99,6 +105,49 @@ def test_sheva_nah_after_shuruq_start():
     assert parts == Parser().parse(word).flat()
 
 
+def test_sheva_nah_after_short_vowel():
+    """`sheva` after short vowel is `sheva-nah` (sheva-nah-after-short-vowel)"""
+    word = r"יִשְׁלַח"  # yish-lach
+    parts = ["yod", "hiriq", "shin", "sheva-nah", "lamed", "patah", "het"]
+    assert parts == Parser().parse(word).flat()
+
+
+def test_sheva_nah_after_accent():
+    """`sheva` after accent is `sheva-nah` (sheva-nah-after-accent)"""
+    word = r"קֵ֑דְמָה"  # keid-ma (Leviticus 16:14)
+    parts = ["qof", "tsere", "dalet", "sheva-nah", "mem", "qamats-gadol", "eim-qria-he"]
+    assert parts == Parser().parse(word).flat()
+
+
+def test_sheva_nah_before_bgdkft_with_dagesh():
+    """`sheva` before BGDKFT with `dagesh` is `sheva-nah`"""
+    word = r"הָפְכִּי"  # hof-khi
+    parts = [
+        "he",
+        "qamats-qatan",
+        "fe",
+        "sheva-nah",
+        "kaf",
+        "dagesh-qal",
+        "hiriq-male-yod",
+        "eim-qria-yod",
+    ]
+    assert parts == Parser().parse(word).flat()
+
+    word = r"קָרְבָּן"  # kor-ban
+    parts = [
+        "qof",
+        "qamats-qatan",
+        "resh",
+        "sheva-nah",
+        "bet",
+        "dagesh-qal",
+        "qamats",  # TODO: should be qamats-gadol
+        "nun-sofit",
+    ]
+    assert parts == Parser().parse(word).flat()
+
+
 def test_sheva_na_after_long_vowel():
     """`sheva` after long vowel is `sheva-na` (sheva-na-after-long-vowel)"""
     word = r"יֵשְׁבוּ"  # yei-she-vu
@@ -109,22 +158,25 @@ def test_sheva_na_after_long_vowel():
 def test_sheva_na_after_holam_alef():
     """holam + alef is a long vowel (sheva-na-after-long-vowel)"""
     word = r"יֹאמְרוּ"  # yo-me-ru (Exodus 4:1)
-    parts = ["yod", "holam-male-alef", "alef", "mem", "sheva-na", "resh", "shuruq"]
-    assert parts == Parser().parse(word).flat()
-
-
-def test_sheva_nah_after_short_vowel():
-    """`sheva` after short vowel is `sheva-nah` (sheva-nah-after-short-vowel)"""
-    word = r"יִשְׁלַח"  # yish-lach
-    parts = ["yod", "hiriq", "shin", "sheva-nah", "lamed", "patah", "het"]
+    parts = ["yod", "holam-haser", "eim-qria-alef", "mem", "sheva-na", "resh", "shuruq"]
     assert parts == Parser().parse(word).flat()
 
 
 def test_sheva_nah_after_initial_vav_with_patah():
     """`sheva` after initial `vav` with `patah` is `sheva-nah` (sheva-nah-after-short-vowel)"""
-    word = r"וַיְהִי"  # vay-he (feels weird)
-    parts = ["vav", "patah", "yod", "sheva-nah", "he", "hiriq-male-yod", "yod"]
+    word = r"וַיְהִי"  # vay-he (feels weird, but Simanim confirms)
+    parts = ["vav", "patah", "yod", "sheva-nah", "he", "hiriq-male-yod", "eim-qria-yod"]
     assert parts == Parser().parse(word).flat()
+
+
+def test_sheva_nah_yod_after_he():
+    """`sheva` under `yod` with no `dagesh` after `he` is `sheva-nah`"""
+    word = r"הַיְאֹר"  # hai-or (Exodus 17:5)
+    parts = ["he", "patah", "yod", "sheva-nah", "alef", "holam-haser", "resh"]
+    assert parts == Parser().parse(word).flat()
+
+
+## Wikipedia Tests
 
 
 def test_sheva_na_wikipedia():
@@ -136,11 +188,19 @@ def test_sheva_na_wikipedia():
     assert parts == Parser().parse(word).flat()
 
     word = r"לְפָנָי‎"  # le-fa-nai
-    parts = ["lamed", "sheva-na", "fe", "qamats-gadol", "nun", "qamats", "yod"]
-    assert parts == Parser(disabled=DEFAULT_DISABLE).parse(word).flat()
+    parts = [
+        "lamed",
+        "sheva-na",
+        "fe",
+        "qamats-gadol",
+        "nun",
+        "qamats-gadol",
+        "yod-glide",
+    ]
+    assert parts == Parser().parse(word).flat()
 
     word = r"שְׁמַע‎"  # she-ma
-    parts = ["shin", "sheva-na-mute", "mem", "patah", "ayin"]
+    parts = ["shin", "sheva-na", "mem", "patah", "ayin"]
     assert parts == Parser().parse(word).flat()
 
     # first of two identical letters
@@ -166,7 +226,7 @@ def test_sheva_na_wikipedia():
     parts = [
         "vav",
         "patah",
-        "yod",
+        "yod-glide",
         "dagesh-hazaq",
         "hiriq",
         "shin",
@@ -186,7 +246,7 @@ def test_sheva_na_wikipedia():
         "sheva-na",
         "het",
         "hiriq-male-yod",
-        "yod",
+        "eim-qria-yod",
         "dalet",
         "sheva-na",
         "khaf-sofit",
@@ -202,7 +262,7 @@ def test_sheva_na_wikipedia():
         "sheva-na",
         "khaf",
         "hiriq-male-yod",
-        "yod",
+        "eim-qria-yod",
         "mem-sofit",
     ]
     assert parts == Parser().parse(word).flat()
@@ -215,7 +275,7 @@ def test_sheva_na_wikipedia():
         "sheva-na",
         "ayin",
         "hiriq-male-yod",
-        "yod",
+        "eim-qria-yod",
         "mem-sofit",
     ]
     assert parts == Parser().parse(word).flat()
@@ -228,7 +288,7 @@ def test_sheva_na_wikipedia():
         "sheva-na",
         "resh",
         "hiriq-male-yod",
-        "yod",
+        "eim-qria-yod",
         "mem-sofit",
     ]
     assert parts == Parser().parse(word).flat()
@@ -242,8 +302,8 @@ def test_sheva_na_wikipedia():
         "dagesh-hazaq",
         "sheva-na",
         "nun",
-        "tsere-male-yod",
-        "yod",
+        "tsere",
+        "eim-qria-yod",
         "khaf",
         "segol",
         "mem-sofit",
@@ -258,10 +318,10 @@ def test_sheva_na_wikipedia():
         "dagesh-hazaq",
         "sheva-na",
         "dalet",
-        "qamats",
+        "qamats",  # TODO: qamats-gadol
         "shin",
     ]
-    assert parts == Parser(disabled=DEFAULT_DISABLE).parse(word).flat()
+    assert parts == Parser().parse(word).flat()
 
 
 # Modern Hebrew Sheva <https://en.wikipedia.org/wiki/Shva>
@@ -273,15 +333,19 @@ def test_modern_sheva_1():
     """`sheva` is voiced when under the first of two letters, both representing the
     same consonant or consonants with identical place and manner of articulation.
     """
+    RULE_NAME = "sheva-modern-double-sound"
+
     word = r"שָׁכְחוּ"  # sha-che-chu (same sound)
-    # TODO: should be qamats-gadol
-    parts = ["shin", "qamats", "khaf", "sheva-na", "het", "shuruq"]
-    assert parts == Parser().parse(word).flat()
+    parts = ["shin", "qamats-gadol", "khaf", "sheva-na", "het", "shuruq"]
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME in parsed.rules.flat()
 
     word = r"מָכְרוּ"  # mach-ru (negative example)
-    # TODO: should be sheva-nah (and qamats-gadol)
-    parts = ["mem", "qamats", "khaf", "sheva", "resh", "shuruq"]
+    parts = ["mem", "qamats-gadol", "khaf", "sheva-na", "resh", "shuruq"]
+    parsed = Parser().parse(word)
     assert parts == Parser().parse(word).flat()
+    assert RULE_NAME not in parsed.rules.flat()
 
     word = r"שָׁדַדְתְּ"  # sha-da-det (same place of articulation)
     parts = [
@@ -290,12 +354,14 @@ def test_modern_sheva_1():
         "dalet",
         "patah",
         "dalet",
-        "sheva-nah-voiced",
+        "sheva-nah",
         "tav",
         "dagesh-qal",
         "sheva-nah",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME in parsed.rules.flat()
 
     word = r"שָׁלַלְתְּ"  # sha-lalt (negative example)
     parts = [
@@ -309,13 +375,17 @@ def test_modern_sheva_1():
         "dagesh-qal",
         "sheva-nah",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME not in parsed.rules.flat()
 
 
 def test_modern_sheva_2():
     """`sheva` is voiced when under the first letter of a word, if this letter
     is a sonorant in modern pronunciation (`yod`, `lamed`, `mem`, `nun`, `resh`).
     """
+    RULE_NAME = "sheva-modern-voiced-sonorant"
+
     word = r"נְמָלִים"  # ne-ma-lim
     parts = [
         "nun",
@@ -324,24 +394,28 @@ def test_modern_sheva_2():
         "qamats-gadol",
         "lamed",
         "hiriq-male-yod",
-        "yod",
+        "eim-qria-yod",
         "mem-sofit",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME in parsed.rules.flat()
 
     word = r"גְּמָלִים"  # ge-ma-lim (traditional); gma-lim (modern); (negative example)
     parts = [
         "gimel",
         "dagesh-qal",
-        "sheva-na-mute",
+        "sheva-na",
         "mem",
         "qamats-gadol",
         "lamed",
         "hiriq-male-yod",
-        "yod",
+        "eim-qria-yod",
         "mem-sofit",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME not in parsed.rules.flat()
 
     word = r"מְנִיָּה"  # me-ni-ya
     parts = [
@@ -351,30 +425,36 @@ def test_modern_sheva_2():
         "hiriq",
         "yod",
         "dagesh-hazaq",
-        "qamats-male-he",
-        "he",
+        "qamats-gadol",
+        "eim-qria-he",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME in parsed.rules.flat()
 
     word = r"בְּנִיָּה"  # be-ni-ya (traditional); bni-ya (modern); (negative example)
     parts = [
         "bet",
         "dagesh-qal",
-        "sheva-na",  # TODO: sheva-na-mute
+        "sheva-na",
         "nun",
         "hiriq",
         "yod",
         "dagesh-hazaq",
-        "qamats-male-he",
-        "he",
+        "qamats-gadol",
+        "eim-qria-he",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME not in parsed.rules.flat()
 
 
 def test_modern_sheva_3():
     """`sheva` is voiced when under the first letter of a word, if the second
     letter is a glottal consonant (`alef`, `he`, `ayin`).
     """
+    RULE_NAME = "sheva-modern-voiced-before-glottal"
+
     word = r"תְּאָרִים"  # te-a-rim
     parts = [
         "tav",
@@ -384,33 +464,36 @@ def test_modern_sheva_3():
         "qamats-gadol",
         "resh",
         "hiriq-male-yod",
-        "yod",
+        "eim-qria-yod",
         "mem-sofit",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME in parsed.rules.flat()
 
     word = r"תְּמָרִים"  # te-ma-rim (traditional); tma-rim (modern); (negative example)
     parts = [
         "tav",
         "dagesh-qal",
-        "sheva-na",  # TODO: sheva-na-mute
+        "sheva-na",
         "mem",
         "qamats-gadol",
         "resh",
         "hiriq-male-yod",
-        "yod",
+        "eim-qria-yod",
         "mem-sofit",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME not in parsed.rules.flat()
 
 
 def test_modern_sheva_4():
     """`sheva` is voiced when under the first letter of a word, if this letter
     represents one of the prefix-morphemes (`be-`, `ve-`, `ke-`, `le-`, `te-`).
     """
-
-    # TODO: requires knowledge of the root word to determine if the first letter
-    # is a prefix or not.
+    # TODO: requires root word to determine if the first letter is a prefix or not.
+    RULE_NAME = "sheva-modern-voiced-prefix"
 
     word = r"בְּרֵיחָהּ"  # be-rei-cha
     parts = [
@@ -418,33 +501,38 @@ def test_modern_sheva_4():
         "dagesh-qal",
         "sheva-na",
         "resh",
-        "tsere-male-yod",
-        "yod",
+        "tsere",
+        "eim-qria-yod",
         "het",
-        "qamats-male-he",
+        "qamats-gadol",
         "mapiq-he",
         "mapiq",
     ]
-    assert parts == Parser(disabled=DEFAULT_DISABLE).parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME in parsed.rules.flat()
 
     word = r"בְּרֵיכָה"  # brei-cha
     parts = [
         "bet",
         "dagesh-qal",
-        "sheva-na",  # TODO: sheva-na-mute
+        "sheva-na",
         "resh",
-        "tsere-male-yod",
-        "yod",
+        "tsere",
+        "eim-qria-yod",
         "khaf",
-        "qamats-male-he",
-        "he",
+        "qamats-gadol",
+        "eim-qria-he",
     ]
-    assert parts == Parser().parse(word).flat()
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    # assert RULE_NAME not in parsed.rules.flat()  # TODO: need base word
 
     # NOTE: requires emphasis information
     word = r"בְּחִישָׁה"  # be-chi-sha
     word = r"בְּחִישָׁה"  # bchi-sha
 
+    # NOTE: requires emphasis information
     word = r"וְרוֹדִים"  # ve-ro-dim
     word = r"וְרוּדִים"  # vru-dim
 
@@ -452,7 +540,49 @@ def test_modern_sheva_4():
     word = r"כְּרָזָה"  # ke-ra-za
     word = r"כְּרָזָה"  # kra-za
 
-    word = r"לְפָּרִיז"
+    word = r"לְפָּרִיז"  # le-pa-rav
+    parts = [
+        "lamed",
+        "sheva-na",
+        "pe",
+        "dagesh-qal",
+        "qamats-gadol",
+        "resh",
+        "hiriq-male-yod",
+        "eim-qria-yod",
+        "zayin",
+    ]
+    parsed = Parser(disabled=["sheva-modern-voiced-sonorant"]).parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME in parsed.rules.flat()
 
-    word = r"תְּבַלּוּ"
+    word = r"תְּבַלּוּ"  # te-va-lu
+    parts = [
+        "tav",
+        "dagesh-qal",
+        "sheva-na",
+        "vet",
+        "patah",
+        "lamed",
+        "dagesh-hazaq",
+        "shuruq",
+    ]
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    assert RULE_NAME in parsed.rules.flat()
+
     word = r"תְּבַלּוּל"
+    parts = [
+        "tav",
+        "dagesh-qal",
+        "sheva-na",
+        "vet",
+        "patah",
+        "lamed",
+        "dagesh-hazaq",
+        "shuruq",
+        "lamed",
+    ]
+    parsed = Parser().parse(word)
+    assert parts == parsed.flat()
+    # assert RULE_NAME not in parsed.rules.flat()  # TODO: need base word

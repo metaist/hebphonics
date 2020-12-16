@@ -38,16 +38,16 @@ def test_no_rules():
 
 def test_disable_rules():
     """disabled rule does not run"""
-    word = r"אֵת"  # eit
-    parts = ["alef", "tsere", "tav"]
-    assert parts == Parser(disabled=["bgdkft-without-dagesh"]).parse(word).flat()
+    word = r"רֻאּֽוּ"  # roo'oo
+    parts = ["resh", "qubuts", "alef", "dagesh-hazaq", "shuruq"]
+    assert parts == Parser(disabled=["dagesh-is-mapiq-alef"]).parse(word).flat()
 
 
 def test_enabled_rules():
     """only enabled rules run"""
     word = r"נֹחַ"  # no-ah
     parts = ["nun", "holam", "het", "patah-genuvah"]
-    enabled, disabled = ["patah-genuvah"], ["holam-haser-default"]
+    enabled, disabled = ["vowel-patah-genuvah"], ["vowel-holam-haser-default"]
     assert parts == Parser(enabled=enabled, disabled=disabled).parse(word).flat()
 
 
@@ -64,19 +64,19 @@ def test_patah_genuvah():
 
 def test_yissachar():
     """yissachar often lacks one of the sin dots"""
-    word = r"יִשָּׂשכָר‎"  # yi-sas-khar
+    word = r"יִשָּׂשכָר‎"  # yi-sa-khar
     parts = [
         "yod",
         "hiriq",
         "sin",
         "dagesh-hazaq",
-        "qamats",
+        "qamats-gadol",
         "sin",
         "khaf",
         "qamats",
         "resh",
     ]
-    assert parts == Parser(disabled=DEFAULT_DISABLE).parse(word).flat()
+    assert parts == Parser().parse(word).flat()
 
 
 def test_mitzvot_matzot():

@@ -13,12 +13,12 @@ NOTE
 
 # native
 from dataclasses import dataclass, field
-from typing import Any, Iterable, List, Iterator, Union
-import operator
+from typing import List, Iterator
 import re
 
 # pkg
 from . import tokens as T
+from .tokens import ItemList
 from .rules import STAGES, isvowel, NIQQUD_TYPES, NIQQUD_HATAF
 
 GEMATRIA_VALUES = {
@@ -93,47 +93,6 @@ def isshemot(uni: str) -> bool:
     False
     """
     return RE_SHEMOT.search(uni) is not None
-
-
-class ItemList(list):
-    """Like `list` except that properties come from the contents.
-
-    >>> l = ItemList([Cluster(letter="A"), Token(letter="B")])
-    >>> l.letter == ["A", "B"]
-    True
-    >>> l.attr(["letter"]) == ["A", "B"]
-    True
-    >>> l.attr(["letter"], first=True) == "A"
-    True
-    """
-
-    def __getattr__(self, name) -> list:
-        """Return a list of the this attribute in the contained atoms."""
-        return self.attr(name, first=False)
-
-    def attr(self, attrs, first=False) -> Union[Any, Iterable[Any]]:
-        """Return the attribute value of the contained atoms.
-
-        Args:
-            attrs (list[str]): attributes to extract
-            first (bool): get first value or None if there are none (default: False)
-
-        Returns:
-            (Any or list[Any]): the values of the attribute
-        """
-        if isinstance(attrs, str):
-            attrs = [attrs]
-
-        key = operator.attrgetter(*attrs)
-        if first:  # short-circuit
-            return key(self[0]) if self else None
-
-        result = ItemList([key(item) for item in self])
-        return result
-
-    def flat(self) -> "ItemList":
-        """Return a flattened version of this object."""
-        return ItemList(T.flatten(self))
 
 
 @dataclass
@@ -288,7 +247,13 @@ class Parser:
         `qamats-`, `male-`, and `sheva-`.
     """
 
-    STAGE_ORDER = [["vav", "dagesh"], ["male", "vowel", "sheva"], ["last"]]
+    STAGE_ORDER = [
+        ["vav", "dagesh"],
+        ["eim-qria", "vowel", "qamats"],
+        ["male", "vowel", "prefix", "sheva"],
+        ["sheva2"],
+        ["qamats2"],
+    ]
 
     def __init__(self, enabled: List[str] = None, disabled: List[str] = None):
         """Construct a new parser with certain rules enabled or disabled."""
@@ -374,8 +339,12 @@ class Parser:
         tokens = self.lex(T.normalize(uni))
         guesses = [self.guess(token) for token in tokens]
 
+        EMPTY_TOKEN = Token()
+        EMPTY_GUESS = Cluster()
+
         last_idx = len(tokens) - 1
         has_maqaf = uni and uni[-1] == T.PUNCTUATION_MAQAF
+        has_accents = has_maqaf or T.POINT_METEG in uni or bool(tokens.accents.flat())
         for group_num, group in enumerate(self.rules):
             prev2, prev1 = Cluster(), Cluster()
             for idx, token in enumerate(tokens):
@@ -383,19 +352,25 @@ class Parser:
                 if not guess:  # it was reset
                     continue
 
+                neg_idx = last_idx - idx
                 islast = idx == last_idx
+                isfirst = idx == 0
                 context = dict(
                     idx=idx,
-                    neg_idx=last_idx - idx,
+                    neg_idx=neg_idx,
                     has_maqaf=has_maqaf,
-                    isfirst=idx == 0,
+                    has_accents=has_accents,
+                    isfirst=isfirst,
                     islast=islast,
                     prev=prev1,
                     token=token,
                     guess=guess,
                     guesses=guesses,
-                    next_token=tokens[idx + 1] if not islast else Token(),
-                    next_guess=guesses[idx + 1] if not islast else Cluster(),
+                    tokens=tokens,
+                    prev_token=tokens[idx - 1] if not isfirst else EMPTY_TOKEN,
+                    next_token=tokens[idx + 1] if not islast else EMPTY_TOKEN,
+                    next_guess=guesses[idx + 1] if not islast else EMPTY_GUESS,
+                    next_guess2=guesses[idx + 2] if neg_idx >= 2 else EMPTY_GUESS,
                 )
 
                 for rules in group:
@@ -419,7 +394,11 @@ class Parser:
         result, syllable = ItemList(), ItemList()
         add_break = False
         for group in parsed:
-            add_break = group.vowel and not group.vowel.startswith(T.NAME_SHEVA_NAH)
+            add_break = group.vowel and not group.vowel in [
+                T.NAME_SHEVA_NAH,
+                # T.NAME_SHEVA_NAH_VOICED,
+                T.NAME_SHEVA_MERAHEF,
+            ]
             if syllable and add_break:
                 result.append(syllable)
                 syllable = ItemList()
