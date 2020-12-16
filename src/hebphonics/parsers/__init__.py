@@ -10,16 +10,17 @@ from functools import partial
 from inspect import cleandoc
 from multiprocessing import Process, RLock, Queue
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional
 from zipfile import ZipFile
 import io
 import os
 import queue
+import re
 import shutil
-from sqlalchemy import func
 
 # lib
 from docopt import docopt
+from sqlalchemy import func
 from tqdm import tqdm
 import requests
 
@@ -64,7 +65,7 @@ def notify_and_join(q: Queue, procs: List[Process]):
     # all processes ended
 
 
-def parse_args(doc: str, argv: List[str] = None):
+def parse_args(doc: str, argv: Optional[List[str]] = None):
     """Parse common args."""
     args = docopt(cleandoc(doc or ""), argv=argv)
     num_cpus = os.cpu_count() if args["--cpus"] == "all" else int(args["--cpus"])
@@ -74,7 +75,7 @@ def parse_args(doc: str, argv: List[str] = None):
     return args
 
 
-def download_unzip(url: str, dest: Path, pattern=None):
+def download_unzip(url: str, dest: Path, pattern: re.Pattern = None) -> Path:
     """Download a zip file; extracting only files that match `pattern`."""
     print(f"downloading {url}")
     res = requests.get(url, headers={"User-Agent": USER_AGENT})

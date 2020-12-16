@@ -116,7 +116,7 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
 
         book = BeautifulSoup(Path(msg.data).read_text(), "lxml").find("text")
         book_id = int(book["num"])
-        result["books"].append(dict(id=book_id, name=book["name"]))
+        result["books"].append(dict(id=book_id, name=book["name"], corpus="chabad.org"))
 
         desc = f"{os.getpid()} COUNT {book['name']:<15}"
         for line in tqdm(book.find_all("line"), desc=desc, position=pos):

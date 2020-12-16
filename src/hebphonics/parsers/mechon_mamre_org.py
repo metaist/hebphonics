@@ -64,7 +64,9 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
         text = book.read_text()
         book_num = int(book.stem[1:], 10)
         book_name = re_name.search(text)[1]
-        result["books"].append(dict(id=book_num, name=book_name))
+        result["books"].append(
+            dict(id=book_num, name=book_name, corpus="mechon-mamre.org")
+        )
 
         desc = f"{os.getpid()} COUNT {book_name:<15}"
         for line in tqdm(text.split("\n"), desc=desc, position=pos):

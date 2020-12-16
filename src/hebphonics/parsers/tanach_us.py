@@ -69,7 +69,9 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
             book = soup.Tanach.tanach.book
             book_name = str(soup.names.find_all("name")[0].string)
             book_num = int(soup.names.number.string)
-            result["books"].append(dict(id=book_num, name=book_name))
+            result["books"].append(
+                dict(id=book_num, name=book_name, corpus="tanach.us")
+            )
 
             desc = f"{os.getpid()} COUNT {book_name:<15}"
             for word in tqdm(book.find_all(["w", "q"]), desc=desc, position=pos):
