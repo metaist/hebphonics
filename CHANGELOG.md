@@ -9,6 +9,22 @@ The format is based on [Keep a Changelog] and this project adheres to [Semantic 
 
 ---
 
+[1.0.2]: https://github.com/metaist/hebphonics/compare/1.0.1...1.0.2
+
+## [1.0.2] - 2020-12-17T03:22:46Z
+
+**Added**
+
+- many new rules
+- `/rules` page with references
+
+**Updated**
+
+- refactored rules
+- word information box
+
+---
+
 [1.0.1]: https://github.com/metaist/hebphonics/compare/1.0.0...1.0.1
 
 ## [1.0.1] - 2020-12-01T04:58:15Z
