@@ -29,7 +29,8 @@ CODE POINTS
 """
 
 # native
-from typing import List
+import operator
+from typing import Any, Iterable, List, Union
 import re
 import unicodedata
 
@@ -106,45 +107,47 @@ SYMBOLS = {
     # sheva
     "sheva": point("POINT_SHEVA"),  # uncategorized sheva
     "sheva-na": point("POINT_SHEVA"),
-    "sheva-na-mute": point("POINT_SHEVA"),  # modern Hebrew
+    # "sheva-na-mute": point("POINT_SHEVA"),  # modern Hebrew
+    # "sheva-na-voiced": point("POINT_SHEVA"),  # modern Hebrew
     "sheva-nah": point("POINT_SHEVA"),
-    "sheva-nah-voiced": point("POINT_SHEVA"),  # modern Hebrew
+    # "sheva-nah-voiced": point("POINT_SHEVA"),  # modern Hebrew
+    "sheva-merahef": point("POINT_SHEVA"),
     "sheva-gaya": point("POINT_SHEVA") + point("POINT_METEG"),  # Yemenite
     # hiriq
     "hiriq": point("POINT_HIRIQ"),
     "hiriq-male-yod": point("POINT_HIRIQ"),
     # tsere
     "tsere": point("POINT_TSERE"),
-    "tsere-male-alef": point("POINT_TSERE"),
-    "tsere-male-he": point("POINT_TSERE"),
-    "tsere-male-yod": point("POINT_TSERE"),
+    # "tsere-male-alef": point("POINT_TSERE"),
+    # "tsere-male-he": point("POINT_TSERE"),
+    # "tsere-male-yod": point("POINT_TSERE"),
     # segol
     "segol": point("POINT_SEGOL"),
-    "segol-male-alef": point("POINT_SEGOL"),
-    "segol-male-he": point("POINT_SEGOL"),
-    "segol-male-yod": point("POINT_SEGOL"),
+    # "segol-male-alef": point("POINT_SEGOL"),
+    # "segol-male-he": point("POINT_SEGOL"),
+    # "segol-male-yod": point("POINT_SEGOL"),
     "hataf-segol": point("POINT_HATAF_SEGOL"),
     # patah
     "patah": point("POINT_PATAH"),
-    "patah-male-alef": point("POINT_PATAH"),
-    "patah-male-he": point("POINT_PATAH"),
-    "patah-yod": point("POINT_PATAH"),
+    # "patah-male-alef": point("POINT_PATAH"),
+    # "patah-male-he": point("POINT_PATAH"),
+    # "patah-yod": point("POINT_PATAH"),
     "patah-genuvah": point("POINT_PATAH"),
     "hataf-patah": point("POINT_HATAF_PATAH"),
     # qamats
     "qamats": point("POINT_QAMATS"),  # unclassified qamats
     "qamats-gadol": point("POINT_QAMATS"),
-    "qamats-male-alef": point("POINT_QAMATS"),
-    "qamats-male-he": point("POINT_QAMATS"),
-    "qamats-yod": point("POINT_QAMATS"),
-    "qamats-yod-vav": point("POINT_QAMATS"),
+    # "qamats-male-alef": point("POINT_QAMATS"),
+    # "qamats-male-he": point("POINT_QAMATS"),
+    # "qamats-yod": point("POINT_QAMATS"),
+    # "qamats-yod-vav": point("POINT_QAMATS"),
     "hataf-qamats": point("POINT_HATAF_QAMATS"),
     "qamats-qatan": point("POINT_QAMATS_QATAN"),
     # holam
     "holam": point("POINT_HOLAM"),
     "holam-haser": point("POINT_HOLAM"),
-    "holam-male-alef": point("POINT_HOLAM"),
-    "holam-male-he": point("POINT_HOLAM"),
+    # "holam-male-alef": point("POINT_HOLAM"),
+    # "holam-male-he": point("POINT_HOLAM"),
     "holam-male-vav": point("LETTER_VAV") + point("POINT_HOLAM"),
     # qubuts / shuruq
     "qubuts": point("POINT_QUBUTS"),
@@ -152,18 +155,22 @@ SYMBOLS = {
     # Letters
     # NOTE: We call them "{x}-sofit" rather than "final-{x}".
     "alef": point("LETTER_ALEF"),
+    "eim-qria-alef": point("LETTER_ALEF"),
     "mapiq-alef": point("LETTER_ALEF"),
     "bet": point("LETTER_BET"),
     "vet": point("LETTER_BET"),
     "gimel": point("LETTER_GIMEL"),
     "dalet": point("LETTER_DALET"),
     "he": point("LETTER_HE"),
+    "eim-qria-he": point("LETTER_HE"),
     "mapiq-he": point("LETTER_HE"),
     "vav": point("LETTER_VAV"),
     "zayin": point("LETTER_ZAYIN"),
     "het": point("LETTER_HET"),
     "tet": point("LETTER_TET"),
     "yod": point("LETTER_YOD"),
+    "yod-glide": point("LETTER_YOD"),
+    "eim-qria-yod": point("LETTER_YOD"),
     "kaf": point("LETTER_KAF"),
     "kaf-sofit": point("LETTER_FINAL_KAF"),
     "khaf": point("LETTER_KAF"),
@@ -290,3 +297,56 @@ def flatten(lst: List) -> list:
         else:
             result.append(item)
     return result
+
+
+class ItemList(list):
+    """Like `list` except that properties come from the contents.
+
+
+    >>> class Obj: x = None
+    >>> objA = Obj()
+    >>> objA.letter = "A"
+    >>> objB = Obj()
+    >>> objB.letter = "B"
+
+    >>> l = ItemList([objA, objB])
+    >>> l.letter == ["A", "B"]
+    True
+    >>> l.attr(["letter"]) == ["A", "B"]
+    True
+    >>> l.attr(["letter"], first=True) == "A"
+    True
+    """
+
+    def __getitem__(self, key) -> Union[Any, "ItemList"]:
+        """Return a sublist."""
+        val = list.__getitem__(self, key)
+        return ItemList(val) if isinstance(key, slice) else val
+
+    def __getattr__(self, name) -> list:
+        """Return a list of the this attribute in the contained atoms."""
+        return self.attr(name, first=False)
+
+    def attr(self, attrs, first=False) -> Union[Any, Iterable[Any]]:
+        """Return the attribute value of the contained atoms.
+
+        Args:
+            attrs (list[str]): attributes to extract
+            first (bool): get first value or None if there are none (default: False)
+
+        Returns:
+            (Any or list[Any]): the values of the attribute
+        """
+        if isinstance(attrs, str):
+            attrs = [attrs]
+
+        key = operator.attrgetter(*attrs)
+        if first:  # short-circuit
+            return key(self[0]) if self else None
+
+        result = ItemList([key(item) for item in self])
+        return result
+
+    def flat(self) -> "ItemList":
+        """Return a flattened version of this object."""
+        return ItemList(flatten(self))

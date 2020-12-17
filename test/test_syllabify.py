@@ -17,7 +17,7 @@ def test_break_before_vowel():
     word = r"בָּרָא"  # ba-ra
     parts = [
         ["bet", "dagesh-qal", "qamats-gadol"],
-        ["resh", "qamats-male-alef", "alef"],
+        ["resh", "qamats-gadol", "eim-qria-alef"],
     ]
     p = Parser()
     assert parts == p.syllabify(p.parse(word))
@@ -31,7 +31,10 @@ def test_break_before_after_sheva_na():
     assert parts == p.syllabify(p.parse(word))
 
     word = r"בְּלִי"  # be-li (traditional); bli (modern; TODO)
-    parts = [["bet", "dagesh-qal", "sheva-na"], ["lamed", "hiriq-male-yod", "yod"]]
+    parts = [
+        ["bet", "dagesh-qal", "sheva-na"],
+        ["lamed", "hiriq-male-yod", "eim-qria-yod"],
+    ]
     p = Parser()
     assert parts == p.syllabify(p.parse(word))
 
@@ -68,6 +71,6 @@ def test_simple_syllables():
     assert parts == p.syllabify(p.parse(word)), "simple closed syllable"
 
     word = r"מִי"
-    parts = [["mem", "hiriq-male-yod", "yod"]]
+    parts = [["mem", "hiriq-male-yod", "eim-qria-yod"]]
     p = Parser()
     assert parts == p.syllabify(p.parse(word)), "simple open syllable"

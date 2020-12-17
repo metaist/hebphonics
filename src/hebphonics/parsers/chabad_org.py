@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Download and parse tanakh from <https://chabad.org/>.
+"""Download and parse Tanakh from <https://chabad.org/>.
 
 Each chapter is in a separate HTML file (e.g., `01 - Genesis - 001.html`) and contains
 navigation and textual information.
@@ -41,12 +41,12 @@ import requests
 
 # pkg
 from . import (
-    USER_AGENT,
-    parse_args,
     Msg,
+    parse_args,
     queuer,
-    spawn_processes,
     save_database,
+    spawn_processes,
+    USER_AGENT,
 )
 from .. import tokens as T
 
@@ -116,7 +116,7 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
 
         book = BeautifulSoup(Path(msg.data).read_text(), "lxml").find("text")
         book_id = int(book["num"])
-        result["books"].append(dict(id=book_id, name=book["name"]))
+        result["books"].append(dict(id=book_id, name=book["name"], corpus="chabad.org"))
 
         desc = f"{os.getpid()} COUNT {book['name']:<15}"
         for line in tqdm(book.find_all("line"), desc=desc, position=pos):

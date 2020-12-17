@@ -10,22 +10,23 @@ from functools import partial
 from inspect import cleandoc
 from multiprocessing import Process, RLock, Queue
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional
 from zipfile import ZipFile
 import io
 import os
 import queue
+import re
 import shutil
-from sqlalchemy import func
 
 # lib
 from docopt import docopt
+from sqlalchemy import func
 from tqdm import tqdm
 import requests
 
 # pkg
 from .. import app, grammar, tokens as T
-from ..models import db_create, db, Book, Word, Occurrence
+from ..models import db_create, db, Book, Word, Freq
 
 USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -64,7 +65,7 @@ def notify_and_join(q: Queue, procs: List[Process]):
     # all processes ended
 
 
-def parse_args(doc: str, argv: List[str] = None):
+def parse_args(doc: str, argv: Optional[List[str]] = None):
     """Parse common args."""
     args = docopt(cleandoc(doc or ""), argv=argv)
     num_cpus = os.cpu_count() if args["--cpus"] == "all" else int(args["--cpus"])
@@ -74,7 +75,7 @@ def parse_args(doc: str, argv: List[str] = None):
     return args
 
 
-def download_unzip(url: str, dest: Path, pattern=None):
+def download_unzip(url: str, dest: Path, pattern: re.Pattern = None) -> Path:
     """Download a zip file; extracting only files that match `pattern`."""
     print(f"downloading {url}")
     res = requests.get(url, headers={"User-Agent": USER_AGENT})
@@ -137,15 +138,16 @@ def parse_word(parser, raw, clean, ref):
         # no letters or vowels
         return None
 
-    syllables = parser.syllabify(parsed)
+    syllables = parser.syl(parsed).json
     return dict(
+        raw=raw,
         hebrew=clean,
         shemot=grammar.isshemot(clean),
         gematria=grammar.gematria(clean),
-        parsed=str(parsed.flat()),
-        syllables=str(syllables),
         syllen=len(syllables),
+        parsed=str(parsed.flat()),
         rules=str(parsed.rules.flat()),
+        syls=syllables,
     )
 
 
@@ -197,7 +199,7 @@ def save_database(lock, pos, write_q):
                 )
             )
 
-        for obj, values in {Book: books, Word: words, Occurrence: occur}.items():
+        for obj, values in {Book: books, Word: words, Freq: occur}.items():
             if not values:
                 continue
             db.engine.execute(obj.__table__.insert().values(values))
@@ -253,5 +255,5 @@ def save_words(lock, pos, write_q):
                 )
             )
 
-        for obj, values in {Book: book, Word: words, Occurrence: occur}.items():
+        for obj, values in {Book: book, Word: words, Freq: occur}.items():
             db.engine.execute(obj.__table__.insert().values(values))

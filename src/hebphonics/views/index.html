@@ -17,7 +17,9 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id={{GOOGLE_ANALYTICS_ID}}"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      var gtag = () => dataLayer.push(arguments);
+      function gtag() {
+        dataLayer.push(arguments);
+      }
       gtag("js", new Date());
       gtag("config", "{{GOOGLE_ANALYTICS_ID}}");
     </script>
@@ -118,7 +120,11 @@
 
           <!-- Rules -->
           <div class="field has-text-centered">
-            <label for="rules" class="label">Which rules?</label>
+            <label for="rules" class="label"
+              >Which rules?
+              <a href="{{url_for('list_rules')}}" target="_blank" data-tooltip="View rule list" class="icon"
+                ><i class="fas fa-info-circle"></i></a
+            ></label>
             <div class="control">
               <select class="select is-multiple" id="rules" multiple size="5">
                 {% for s in rules|sort: %}
@@ -255,6 +261,9 @@
               </p>
               <p class="control">
                 <label class="radio"> <input name="order" type="radio" value="random" /> Random </label>
+              </p>
+              <p class="control">
+                <label class="radio"> <input name="order" type="radio" value="source" /> Source </label>
               </p>
               <p class="control">
                 <label class="radio"> <input name="order" type="radio" value="freq" /> Frequncy </label>
@@ -479,15 +488,7 @@
             }
 
             var p = '<p title="${w.s}" >';
-            words = words.map(
-              (w) => `
-              <div class="hebrew" dir="rtl" lang="he"
-                data-frequency="${w.f}"
-                data-syllables="${w.s}"
-                data-rules="${w.r}"
-                data-ref="${w.e}">${w.h}</div>
-            `
-            );
+            words = words.map((w) => `<div class="hebrew" dir="rtl" lang="he" data-freq="${w.f}" data-ref="${w.r}">${w.h}</div>`);
             $results.innerHTML = words.join("");
             $container.classList.remove("state-empty");
             $container.classList.add("state-full");
@@ -506,11 +507,11 @@
 
           postJSON("/display", { word: e.target.innerText }).then((data) => {
             $container.innerHTML = `
-            <div>${data["data"]}</div>
+            <div>${data["display"]}</div>
             <p>${link}</p>
-            <p><strong>Frequency</strong>${edata["frequency"]}</p>
-            <p><strong>Syllables</strong> <code>${edata["syllables"]}</code></p>
-            <p><strong>Rules</strong> <code>${edata["rules"]}</code></p>
+            <p><strong>Frequency</strong> ${edata["freq"]}</p>
+            <p><strong>Syllables</strong> <code>${data["syllables"]}</code></p>
+            <p><strong>Rules</strong> <code>${data["rules"]}</code></p>
           `;
           });
         },

@@ -12,6 +12,7 @@ _seed.py
 .idea
 .vim
 .vscode
+*.code-workspace
 
 # config
 .blackbox/pubring.gpg~

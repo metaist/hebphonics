@@ -1,79 +1,135 @@
 # Hebrew Grammar Rules
 
-## Assumptions
+## Prerequisites
 
-1. The text contains _[niqqud][wiki-niqqud]_ (vowels). Text without vowels is parsable, but unlikely to be as useful for teaching introductory students how to read Hebrew.
+1. Almost all of the rules discussed here require text with _[niqqud][wiki-niqqud]_ (vowels). A small subset can be applied using just letter combinations, but the purpose of this system is to teach introductory students how to read Hebrew, so vowels are usually required even such texts are often hard to find.
 
-2. We can safely ignore cantillation marks, even though they might help determine which syllables are stressed / unstressed.
+2. Some rules require syllable emphasis information. This is even harder to find although good [cantillation][wiki-trup] markings often indicate important emphasis information.
 
 [wiki-niqqud]: http://en.wikipedia.org/wiki/Niqqud
+[wiki-trup]: https://en.wikipedia.org/wiki/Hebrew_cantillation
 
 ## Unicode Symbols
 
-A **Unicode symbol** is Unicode code point (a character) that appears in a text. The primary concern of the Unicode Consortium is defining the so-called "presentation forms" of characters (how characters appear on a screen), although they also account for various grammatical roles that similar-looking symbols play. For consistency, we generally use the Unicode naming conventions (except for "Final-" letters which we designate with a "-Sofit" suffix). The relevant Unicode pages for Hebrew are:
+A **Unicode symbol** is a Unicode code point (a character) that appears in a text. The primary concern of the Unicode Consortium is defining how characters appear ("presentation forms"), although they also account for various grammatical roles that similar-looking symbols play. For consistency, we generally use the Unicode naming conventions, except we use suffix "sofit" instead of the prefix "final".
 
-- [Hebrew](https://www.unicode.org/charts/PDF/U0590.pdf)
-- [Alphabetic Presentation Forms](https://www.unicode.org/charts/PDF/UFB00.pdf)
+The relevant Unicode pages for Hebrew are:
 
-We represent Unicode characters in UPPERCASE with underscores connecting multiple words.
+- [U0590 - Hebrew](https://www.unicode.org/charts/PDF/U0590.pdf)
+- [UFB00 - Alphabetic Presentation Forms](https://www.unicode.org/charts/PDF/UFB00.pdf)
+
+We represent Unicode characters in `UPPERCASE_WITH_UNDERSCORES` connecting multiple words.
 
 - Niqqud: `DAGESH`, `SHEVA`, `HIRIQ`, `TSERE`, `SEGOL`, `HATAF_SEGOL`, `PATAH`, `HATAF_PATAH`, `QAMATS`, `HATAF_QAMATS`, `QAMATS_QATAN`, `HOLAM`, `QUBUTS`, `SHIN_DOT`, `SIN_DOT`
 
-- Letters: `ALEF`, `BET`, `GIMEL`, `DALET`, `HE`, `VAV`, `ZAYIN`, `HET`, `TET`, `YOD`, `KAF`, `KAF_SOFIT`, `LAMED`, `MEM`, `MEM_SOFIT`, `NUN`, `NUN_SOFIT`, `SAMEKH`, `AYIN`, `PE`, `PE_SOFIT`, `TSADI`, `TSADI_SOFIT`, `QOF`, `RESH`, `SHIN`, `TAV`,
+- Letters: `ALEF`, `BET`, `GIMEL`, `DALET`, `HE`, `VAV`, `ZAYIN`, `HET`, `TET`, `YOD`, `KAF`, `KAF_SOFIT`, `LAMED`, `MEM`, `MEM_SOFIT`, `NUN`, `NUN_SOFIT`, `SAMEKH`, `AYIN`, `PE`, `PE_SOFIT`, `TSADI`, `TSADI_SOFIT`, `QOF`, `RESH`, `SHIN`, `TAV`
 
 ## Grammatical Symbols
 
 A **grammatical symbol** is the name of a grouping of one or more Unicode symbols and the grammatical role it plays. For example, a `SHEVA` may be a `sheva-na` or a `sheva-nah` depending on its position within a word. Similarly, a `patah` at the end of a word is a `patah-genuvah`.
 
-We represent grammatical names in lowercase with dashes connecting multiple words.
+We represent grammatical names in `lowercase-with-dashes` connecting multiple words.
 
-- Niqqud: `mapiq`, `dagesh` (unclassified), `dagesh-qal`, `dagesh-hazaq`, `sheva` (unclassified), `sheva-na`, `sheva-nah`, `hiriq`, `hiriq-male`, `tsere`, `tsere-male`, `segol`, `segol-male`, `hataf-segol`, `patah`, `patah-male`, `patah-genuvah`, `hataf-patah`, `qamats`, `qamats-male`, `hataf-qamats`, `qamats-qatan`, `holam-male`, `holam-haser`, `qubuts`, `shuruq`
+- Niqqud:
+
+  - `dagesh` (unclassified)
+    - `mapiq`
+    - `dagesh-qal`
+    - `dagesh-hazaq` (default)
+  - `sheva` (unclassified)
+    - `sheva-na`
+    - `sheva-na-mute`
+    - `sheva-nah`
+    - `sheva-nah-voiced`
+    - `sheva-gaya`
+  - `hiriq`
+    - `hiriq-male-yod`
+  - `tsere`
+    - `tsere-male-alef`
+    - `tsere-male-he`
+    - `tsere-male-yod`
+  - `segol`
+    - `segol-male-alef`
+    - `segol-male-he`
+    - `segol-male-yod`
+    - `hataf-segol`
+  - `patah`
+    - `patah-male-alef`
+    - `patah-male-he`
+    - `patah-yod`
+    - `patah-genuvah`
+    - `hataf-patah`
+  - `qamats` (unclassified)
+    - `qamats-gadol`
+    - `qamats-male-alef`
+    - `qamats-male-he`
+    - `qamats-yod`
+    - `qamats-yod-vav`
+    - `hataf-qamats`
+    - `qamats-qatan`
+  - `holam` (unclassified)
+    - `holam-haser` (default)
+    - `holam-male-alef`
+    - `holam-male-he`
+    - `holam-male-vav`
+  - `qubuts`
+  - `shuruq`
 
 - Letters: `alef`, `mapiq-alef`, `bet`, `vet`, `gimel`, `dalet`, `he`, `mapiq-he`, `vav`, `zayin`, `het`, `tet`, `yod`, `kaf`, `kaf-sofit`, `khaf`, `khaf-sofit`, `lamed`, `mem`, `mem-sofit`, `nun`, `nun-sofit`, `samekh`, `ayin`, `pe`, `pe-sofit`, `fe`, `fe-sofit`, `tsadi`, `tsadi-sofit`, `qof`, `resh`, `shin`, `sin`, `tav`, `sav`
 
 The purpose of this document is to explain how to translate a sequence of Unicode symbols into grammatical symbols.
 
-## Symbol Classes
+## Letters
 
-- **BGDKFT letters**: `bet`, `gimel`, `dalet`, `kaf`, `pe`, `tav`
-- [yht-1] **Guttural letters**: `alef`, `he`, `het`, `ayin`
-- [yht-1] **Semi-guttural**: `resh`
-- [yesod] Each short vowel has a corresponding long vowel.
-  - Short: `patah`, `qubuts`, `hiriq-haser`, `qamats-qatan`, `segol`
-  - Long: `qamats`, `shuruq`, `hiriq-male`, `holam-male`,`holam-haser`, `tsere`
+For convenience, we refer to certain groups of letters with special names.
+
+- **BGDKFT**: In Hebrew, these letters have special rules that apply to them: `BET`, `GIMEL`, `DALET`, `KAF`, `PE`, `TAV` (Source: [Simanim] 1.3)
+
+- **Guttural letters**: `alef`, `he`, `het`, `ayin` (Sources: [Simanim] 4.1, [yht-1])
+
+- **Semi-guttural letters**: `resh` (Source: [yht-1])
+
+## Vowels
+
+Ten vowels are grouped into five pairs of "long" and "short" vowels (Source: [Simanim] 1.1, [yesod]).
+
+- **Short vowels**: `patah`, `segol`, `hiriq`, `qamats-qatan`, `qubuts`
+- **Long vowels**: `qamats-gadol`, `tsere`, `hiriq-male-yod`, `holam-*`, `shuruq`
 
 ## Syllables
 
-- [x] H001: syllable break before a vowel (lax includes hataf-vowel)
-- [x] H002: syllable break before and after `sheva-na` (but not `sheva-nah`)
+Hebrew has a concept of `havarah` which is similar to, but not exactly the same as, a syllable. Standard rules:
+
+- `sheva-na*` belongs to the next `havarah` (Source: [Simanim] 1.2)
+- `sheva-nah*` belongs to the previous `havarah` (Source: [Simanim] 1.2)
+
+However, because we are teaching introductory learners how to read, we have some non-standard rules to make it easier to pronounce words:
+
+- [x] Rule: syllable break before every vowel (including `hataf-` vowels) and every `sheva-na*`
+  - "אֲשֶׁר" (`hataf`)
   - "שָׁרְצוּ" (`sheva-na`)
   - "יִשְׁרְצוּ" (`sheva-nah`)
-- [x] H003: (strict) no syllable break after hataf-vowel
-  - "אֲשֶׁר"
 
-### Notes
-
-- [h4c-3.1] The number of syllables is the number of vowels.
-- [h4c-3.1] A syllable is _open_ if it ends with a vowel sound.
-- [h4c-3.1] A syllable is _closed_ if it ends with a letter without a vowel.
-- [h4c-3.2] A `hataf-` vowel can be classified either as part of the next syllable or on its own. In practice, a `sheva-na` (and `hataf-` vowels) should be considered part of the next syllable.
+A syllable is considered _open_ if it ends with a vowel sound; _closed_ if it ends with a letter without a vowel sound (Source: [h4c-3.1]).
 
 ## `dagesh-`
 
-- [x] H101 `dagesh` in `alef` is `mapiq-alef` (rare)
+A `dagesh` is a dot in the body of a letter and it comes in two types: `dagesh-qal` and `dagesh-hazaq` (Source: [Simanim] 1.3).
+
+- [x] Rule: `dagesh` in `alef` is `mapiq-alef` (rare)
   - "רֻאּֽוּ" [Job 33:21]
-- [x] H102 `dagesh` in last `he` is `mapiq-he`
+- [x] Rule: `dagesh` in **last** `he` is `mapiq-he`
   - "בָּהּ" [Exodus 2:3]
-- [x] H103 `dagesh` in non-last `he` is (`he`, `dagesh-hazaq`)
+- [x] Rule: `dagesh` in non-last `he` is (`he`, `dagesh-hazaq`) (non-standard)
   - "חֲמֹרֵיהֶּם" [Genesis 34:28]
-- [x] H104 [h4c-3.4] `dagesh` in BGDKFT after vowel is `dagesh-hazaq`
+- [x] Rule: `dagesh` in BGDKFT after vowel is `dagesh-hazaq` (Source: [Simanim] 1.3)
   - "שַׁבָּת" [Exodus 16:23]
-- [x] H105 [h4c-3.4] [yesod] `dagesh` in BGDKFT NOT after vowel is `dagesh-qal` (including start of word)
+- [ ] Rule: `dagesh` in BGDKFT after `sheva-nah` is `dagesh-qal` (Source: [Simanim] 1.3)
+  - "קָרָבְתָּ" [Deuteronomy 2:37]
+- [x] Rule: `dagesh` in BGDKFT NOT after vowel is `dagesh-qal` (including start of word) (Sources: [Simanim] 1.3)
   - "בָּרָא" [Genesis 1:1]
-- [x] H106 any other `dagesh` is a `dagesh-hazaq`
+- [x] Rule: any other `dagesh` is a `dagesh-hazaq`
   - "הַמַּיִם" [Genesis 1:7]
-  - > "וַיֹּאמֶר" [Genesis 1:3]
-  - > "הַטּוֹבָה" [Exodus 18:9]
 
 ### Notes
 
@@ -211,6 +267,7 @@ The purpose of this document is to explain how to translate a sequence of Unicod
 
 ## References
 
+- [simanim] Riachi, Shmuel Meir, ed. _Tikkun Korim: Simanim_. Jerusalem, 1995.
 - [h4c-3.1], [h4c-3.2], [h4c-3.4], [h4c-3.5]
 - [ki-1]
 - [shaila-1]
@@ -223,12 +280,13 @@ The purpose of this document is to explain how to translate a sequence of Unicod
 [hs-1]: https://hebrewsyntax.org/rbh1/RBH_02%D7%90_Hebrew_vowels.pdf
 [ki-1]: http://kingdominfo.net/Dagesh_Rules.pdf
 [os-1]: https://opensiddur.org/help/rules-for-niqqud/
+[sbl-1]: https://www.sbl-site.org/Fonts/SBLHebrewUserManual1.5x.pdf
 [shaila-1]: http://www.shailamorah.com/kriah-roundtable/teaching-shva-rules
+[simanim]: http://www.librarything.com/work/4905686
 [ulpan]: http://www.ulpan.net/kamatz-katan
 [yesod]: https://www.amazon.com/Ha-yesod-Fundamentals-Hebrew-English/dp/0873062140
 [yht-1]: https://yourhebrewtutor.com/2015/12/11/the-guttural-letters/
 [yht-2]: https://yourhebrewtutor.com/2016/01/14/a-friendly-reminder-the-shewa/
-[sbl-1]: https://www.sbl-site.org/Fonts/SBLHebrewUserManual1.5x.pdf
 
 <!-- -->
 
