@@ -45,7 +45,51 @@ from tqdm import tqdm
 
 # pkg
 from . import parse_args, download_unzip, Msg, queuer, spawn_processes, save_database
-from .. import tokens as T
+from .. import tokens as T, grammar
+
+BOOK_NAMES = {
+    "בראשית": "Genesis",
+    "שמות": "Exodus",
+    "ויקרא": "Leviticus",
+    "במדבר": "Numbers",
+    "דברים": "Deuteronomy",
+    #
+    "יהושוע": "Joshua",
+    "שופטים": "Judges",
+    "שמואל א": "I Samuel",
+    "שמואל ב": "II Samuel",
+    "מלכים א": "I Kings",
+    "מלכים ב": "II Kings",
+    "ישעיהו": "Isaiah",
+    "ירמיהו": "Jeremiah",
+    "יחזקאל": "Ezekiel",
+    "הושע": "Hosea",
+    "יואל": "Joel",
+    "עמוס": "Amos",
+    "עובדיה": "Obadiah",
+    "יונה": "Jonah",
+    "מיכה": "Micah",
+    "נחום": "Nahum",
+    "חבקוק": "Habakkuk",
+    "צפניה": "Zephaniah",
+    "חגיי": "Haggai",
+    "זכריה": "Zechariah",
+    "מלאכי": "Malachi",
+    #
+    "תהילים": "Psalms",
+    "משלי": "Proverbs",
+    "איוב": "Job",
+    "שיר השירים": "Song of Songs",
+    "רות": "Ruth",
+    "איכה": "Lamentations",
+    "קוהלת": "Ecclesiastes",
+    "אסתר": "Esther",
+    "דנייאל": "Daniel",
+    "עזרא / נחמיה ע": "Ezra",
+    "עזרא / נחמיה נ": "Nehemiah",
+    "דברי הימים א": "I Chronicles",
+    "דברי הימים ב": "II Chronicles",
+}
 
 
 def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
@@ -62,20 +106,42 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
 
         book = Path(msg.data)
         text = book.read_text()
-        book_num = int(book.stem[1:], 10)
+        # book_num = int(book.stem[1:], 10)
         book_name = re_name.search(text)[1]
-        result["books"].append(
-            dict(id=book_num, name=book_name, corpus="mechon-mamre.org")
-        )
+        book_num = 0
+        en_name = ""
 
+        # result["books"].append(
+        #     dict(id=book_num, name=book_name, corpus="mechon-mamre.org")
+        # )
+
+        save_ref = ""
         desc = f"{os.getpid()} COUNT {book_name:<15}"
         for line in tqdm(text.split("\n"), desc=desc, position=pos):
             line = re_remove.sub("", line).replace("<BR>", " ").strip()
-            if not line or not line.startswith("<B>"):
-                continue
+            if save_ref:
+                ref, save_ref = save_ref, ""
+            else:
+                if not line or not line.startswith("<B>"):
+                    continue
 
-            chapter, verse = re_ref.search(line)[1].split(",")
-            # chapter, verse = grammar.gematria(chapter), grammar.gematria(verse)
+                ref = re_ref.search(line)[1].replace(" ׆", "")
+                if "-" in ref:
+                    ref, save_ref = ref.split("-")
+                    save_ref = f'{ref.split(",")[0]},{save_ref}'
+
+            ref = f"{book_name} {ref}"
+            he_name, ref = ref.rsplit(" ", 1)
+            tmp_name = BOOK_NAMES[he_name]
+            if tmp_name != en_name:
+                en_name = tmp_name
+                book_num = list(BOOK_NAMES).index(he_name) + 1
+                result["books"].append(
+                    dict(id=book_num, name=en_name, corpus="mechon-mamre.org")
+                )
+
+            chapter, verse = ref.split(",")
+            chapter, verse = grammar.gematria(chapter), grammar.gematria(verse)
             line = re_ref.sub("", line)  # reference removed
 
             line = line.replace(T.PUNCTUATION_MAQAF, T.PUNCTUATION_MAQAF + " ")
@@ -87,7 +153,7 @@ def count_words(lock, pos: int, read_q: Queue, write_q: Queue):
                 if clean in result["words"]:
                     result["words"][clean]["freq"] += 1
                 else:
-                    ref = f"{book_name} {chapter}:{verse}"
+                    ref = f"{en_name} {chapter}:{verse}"
                     result["words"][clean] = dict(
                         book_id=book_num, freq=1, ref=ref, raw=raw
                     )

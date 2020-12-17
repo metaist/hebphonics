@@ -140,6 +140,7 @@ def parse_word(parser, raw, clean, ref):
 
     syllables = parser.syl(parsed).json
     return dict(
+        raw=raw,
         hebrew=clean,
         shemot=grammar.isshemot(clean),
         gematria=grammar.gematria(clean),

@@ -17,6 +17,7 @@ class Book(BaseMixin, db.Model):
 class Word(BaseMixin, db.Model):
     """Hebrew word."""
 
+    raw = db.Column(db.Unicode)
     hebrew = db.Column(db.Unicode, index=True, unique=True)
     shemot = db.Column(db.Boolean, default=False)
     gematria = db.Column(db.Integer)
