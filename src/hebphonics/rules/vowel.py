@@ -84,7 +84,7 @@ def glide_oy(guess, next_guess2):
 
 
 @rule("vowel", "glide-uy")
-def glide_uy(guess, next_guess2):
+def glide_uy(idx, guess, next_guess2):
     """bare `yod` after `shuruq` is `yod-glide`"""
-    if guess.vowel == T.NAME_SHURUQ and next_guess2.isbare(T.NAME_YOD):
+    if idx >= 1 and guess.vowel == T.NAME_SHURUQ and next_guess2.isbare(T.NAME_YOD):
         return next_guess2.update(letter=T.NAME_YOD_GLIDE, isopen=True)

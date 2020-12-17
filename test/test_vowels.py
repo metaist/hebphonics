@@ -72,3 +72,8 @@ def test_glide_uy():
     word = r"צִפּוּי"  # tsi-puy (Numbers 17:3)
     parts = ["tsadi", "hiriq", "pe", "dagesh-hazaq", "shuruq", "yod-glide"]
     assert parts == Parser().parse(word).flat()
+
+    # words that start with shuruq don't count
+    word = r"וּמִי"  # u-mi (Deuteronomy 4:8)
+    parts = ["shuruq", "mem", "hiriq-male-yod", "eim-qria-yod"]
+    assert parts == Parser().parse(word).flat()
