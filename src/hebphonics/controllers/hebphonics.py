@@ -45,7 +45,7 @@ def index():
     return render_template(
         "index.html",
         books=[b.name for b in Book.query.order_by(Book.id).all()],
-        symbols=list(T.SYMBOLS),
+        symbols=[x for x in list(T.SYMBOLS) if x not in ["dagesh", "holam"]],
         rules=rules.RULES,
         version=VERSION,
         GOOGLE_ANALYTICS_ID=GOOGLE_ANALYTICS_ID,

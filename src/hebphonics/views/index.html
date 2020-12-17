@@ -120,7 +120,11 @@
 
           <!-- Rules -->
           <div class="field has-text-centered">
-            <label for="rules" class="label">Which rules?</label>
+            <label for="rules" class="label"
+              >Which rules?
+              <a href="{{url_for('list_rules')}}" target="_blank" data-tooltip="View rule list" class="icon"
+                ><i class="fas fa-info-circle"></i></a
+            ></label>
             <div class="control">
               <select class="select is-multiple" id="rules" multiple size="5">
                 {% for s in rules|sort: %}
