@@ -500,10 +500,21 @@
 
           var edata = e.target.dataset;
           var $container = $one("#details .message-body");
-          var link = `<a href="https://www.sefaria.org/${edata["ref"]
+          var referenceLink = edata["ref"]
             .replace(/[ :]/g, ".")
             .replace("^1\.", "I_")
-            .replace("^2\.", "II_")}?lang=bi" target="_blank">${edata["ref"]}</a>`;
+            .replace("^2\.", "II_");
+          
+          /** Inelegant way to make  */
+          if referenceLink.startsWith("I.") {
+            referenceLink = referenceLink.replace("I.", "I_")
+          }          
+          
+          if referenceLink.startsWith("II.") {
+            referenceLink = referenceLink.replace("II.", "II_")
+          }
+          
+          var link = `<a href="https://www.sefaria.org/${referenceLink}?lang=bi" target="_blank">${edata["ref"]}</a>`;
 
           postJSON("/display", { word: e.target.innerText }).then((data) => {
             $container.innerHTML = `
